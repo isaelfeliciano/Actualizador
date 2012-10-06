@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
-  Menus, IniFiles, Grids, DBGrids, ComCtrls;
+  Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi;
 
 type
   TForm1 = class(TForm)
@@ -63,10 +63,12 @@ type
     procedure BitBtn1Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+
+
   private
-    { Private declarations }
+
   public
-    { Public declarations }
+
   end;
 
 var
@@ -74,9 +76,12 @@ var
   Ini  : TIniFile;
   Cad1, Cad2, Cad3, Sql: String;
   Num1, Num2, Num_Act: Integer;
+  lpFileOp: TSHFileOpStruct;
 implementation
 
 {$R *.dfm}
+//FUNCION PARA COPIAR
+
 
 procedure TForm1.IdIcmpClient1Reply(ASender: TComponent;
   const AReplyStatus: TReplyStatus);
@@ -92,12 +97,15 @@ end;
 procedure TForm1.BitBtn1Click(Sender: TObject);
 begin
 IdIcmpClient1.Ping;
-Num1:= Ini.ReadString( 'ComboBox1', 'Num_Act', '' );
+Num1:= StrToInt(Ini.ReadString( 'ComboBox1', 'Num_Act', '' ));
 Num2:= SimpleDataSet1UPGRADE.AsInteger;
  if Num1 < Num2 then
-      //Iniciar Copiar
+ begin
+ //origen:= 'D:\Actualizaciones\*.*';
+ //destino:= 'D:\Easy System S2010';
+ 
+  end;
 end;
-
 procedure TForm1.BitBtn2Click(Sender: TObject);
 begin
  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
@@ -145,4 +153,5 @@ Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
       SimpleDataSet1.Open;
 end;
 end;
+
 end.

@@ -6,11 +6,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
-  Menus, IniFiles, Grids, DBGrids;
+  Menus, IniFiles, Grids, DBGrids, ComCtrls;
 
 type
   TForm1 = class(TForm)
-    Gauge1: TGauge;
     SQLConnection1: TSQLConnection;
     SimpleDataSet1: TSimpleDataSet;
     Label1: TLabel;
@@ -58,6 +57,7 @@ type
     SimpleDataSet1SAN_CRISTOBAL: TSmallintField;
     SimpleDataSet1SAN_VICENTE: TSmallintField;
     SimpleDataSet1VILLA_MELLA: TSmallintField;
+    ProgressBar1: TProgressBar;
     procedure IdIcmpClient1Reply(ASender: TComponent;
       const AReplyStatus: TReplyStatus);
     procedure BitBtn1Click(Sender: TObject);
@@ -73,7 +73,7 @@ var
   Form1: TForm1;
   Ini  : TIniFile;
   Cad1, Cad2, Cad3, Sql: String;
-  Num1, Num2: Integer;
+  Num1, Num2, Num_Act: Integer;
 implementation
 
 {$R *.dfm}
@@ -92,6 +92,10 @@ end;
 procedure TForm1.BitBtn1Click(Sender: TObject);
 begin
 IdIcmpClient1.Ping;
+Num1:= Ini.ReadString( 'ComboBox1', 'Num_Act', '' );
+Num2:= SimpleDataSet1UPGRADE.AsInteger;
+ if Num1 < Num2 then
+      //Iniciar Copiar
 end;
 
 procedure TForm1.BitBtn2Click(Sender: TObject);
@@ -101,6 +105,7 @@ begin
     Ini.WriteString( 'ComboBox1', 'Terminal', ComboBox1.Text);
     Ini.WriteString( 'ComboBox1', 'Modo', CbModo.Text );
     Ini.WriteString( 'ComboBox1', 'Iniciado?', 'SI' );
+    //Ini.WriteString( 'ComboBox1', 'Num_Act', '' );
     Ini.WriteBool( 'Form', 'InitMax', WindowState = wsMaximized );
   finally
     Ini.Free;
