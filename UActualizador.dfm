@@ -1,16 +1,17 @@
 object Form1: TForm1
   Left = 424
   Top = 137
-  Width = 548
-  Height = 166
+  Width = 600
+  Height = 213
   Caption = 'Form1'
-  Color = clBtnFace
+  Color = clBtnHighlight
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -25,19 +26,28 @@ object Form1: TForm1
     Font.Style = []
     ParentFont = False
   end
+  object Gauge1: TGauge
+    Left = 0
+    Top = 40
+    Width = 587
+    Height = 28
+    Color = 16744448
+    ParentColor = False
+    Progress = 0
+  end
   object BitBtn1: TBitBtn
-    Left = 32
-    Top = 88
+    Left = 448
+    Top = 72
     Width = 75
     Height = 25
     Caption = 'BitBtn1'
     TabOrder = 0
     OnClick = BitBtn1Click
   end
-  object ComboBox1: TComboBox
-    Left = 120
+  object CbTerminal: TComboBox
+    Left = 0
     Top = 88
-    Width = 145
+    Width = 121
     Height = 21
     ItemHeight = 13
     Sorted = True
@@ -83,32 +93,70 @@ object Form1: TForm1
       'Villa_Mella')
   end
   object CbModo: TComboBox
-    Left = 280
+    Left = 120
     Top = 88
-    Width = 145
+    Width = 81
     Height = 21
     ItemHeight = 13
     TabOrder = 2
-    Text = 'CbModo'
+    Text = 'Modo'
     Items.Strings = (
       'Local'
       'Remoto')
   end
   object BitBtn2: TBitBtn
-    Left = 440
-    Top = 88
+    Left = 448
+    Top = 96
     Width = 75
     Height = 25
     Caption = 'BitBtn2'
     TabOrder = 3
     OnClick = BitBtn2Click
   end
-  object ProgressBar1: TProgressBar
-    Left = 0
-    Top = 48
-    Width = 545
+  object BitBtn3: TBitBtn
+    Left = 448
+    Top = 120
+    Width = 75
     Height = 25
+    Caption = 'BitBtn3'
     TabOrder = 4
+    OnClick = BitBtn3Click
+  end
+  object CbRutaES: TComboBox
+    Left = 200
+    Top = 88
+    Width = 97
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 5
+    Text = 'Ruta ES'
+    Items.Strings = (
+      'C:\Easy System S2010\'
+      'D:\Easy System S2010\'
+      'E:\Easy System S2010\'
+      'F:\Easy System S2010\'
+      'G:\Easy System S2010\')
+  end
+  object BitBtn4: TBitBtn
+    Left = 448
+    Top = 144
+    Width = 75
+    Height = 25
+    Caption = 'BitBtn4'
+    TabOrder = 6
+    OnClick = BitBtn4Click
+  end
+  object CbRutaApp: TComboBox
+    Left = 296
+    Top = 88
+    Width = 137
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 7
+    Text = 'Ruta Dir App'
+    Items.Strings = (
+      'C:\Archivos de programa\WinRAR\rar.exe'
+      'C:\Program Files\WinRAR\rar.exe')
   end
   object SQLConnection1: TSQLConnection
     ConnectionName = 'IBConnection'
@@ -507,7 +555,6 @@ object Form1: TForm1
   object IdIcmpClient1: TIdIcmpClient
     Host = '10.0.0.15'
     Port = 21
-    OnReply = IdIcmpClient1Reply
     Left = 472
     Top = 8
   end
