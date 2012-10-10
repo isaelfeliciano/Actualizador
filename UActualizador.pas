@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
-  Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls;
+  Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls,
+  TrayIcon, jpeg;
 
 type
   TForm1 = class(TForm)
@@ -14,7 +15,6 @@ type
     SimpleDataSet1: TSimpleDataSet;
     Label1: TLabel;
     IdIcmpClient1: TIdIcmpClient;
-    BitBtn1: TBitBtn;
     CbTerminal: TComboBox;
     CbModo: TComboBox;
     BitBtn2: TBitBtn;
@@ -57,14 +57,19 @@ type
     SimpleDataSet1SAN_CRISTOBAL: TSmallintField;
     SimpleDataSet1SAN_VICENTE: TSmallintField;
     SimpleDataSet1VILLA_MELLA: TSmallintField;
-    BitBtn3: TBitBtn;
     CbRutaES: TComboBox;
-    BitBtn4: TBitBtn;
     CbRutaApp: TComboBox;
     Gauge1: TGauge;
     CbRuta_Act: TComboBox;
     Label2: TLabel;
     Timer1: TTimer;
+    TrayIcon1: TTrayIcon;
+    PopupMenu1: TPopupMenu;
+    ActualizarAhora1: TMenuItem;
+    CerrarActualizador1: TMenuItem;
+    Image1: TImage;
+    Timer2: TTimer;
+    MostrarActualizador1: TMenuItem;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -74,6 +79,11 @@ type
     procedure BitBtn4Click(Sender: TObject);
     procedure SQLConnection1BeforeConnect(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    procedure ActualizarAhora1Click(Sender: TObject);
+    procedure CerrarActualizador1Click(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Timer2Timer(Sender: TObject);
+    procedure MostrarActualizador1Click(Sender: TObject);
 
 
   private
@@ -83,6 +93,7 @@ type
   Procedure Borrar_Rars;
   procedure CrearArchivoBat(rutArchivo: string);
   Procedure Copiando_Rars;
+  procedure PonerProgramaInicio;
   public
 
   end;
@@ -111,6 +122,28 @@ begin
         Result:=false;
      end;
 end;
+/////////////////////////////INICIAR CON WINDOWS: INICIO
+procedure TForm1.PonerProgramaInicio;
+var Registro: TRegistry;
+begin
+
+  Registro := TRegistry.Create;
+  Registro.RootKey := HKEY_LOCAL_MACHINE;
+
+  if Registro.OpenKey( 'Software\Microsoft\Windows\CurrentVersion\Run', FALSE ) then
+  begin
+    try
+    Registro.WriteString( ExtractFileName( Application.ExeName ), Application.ExeName );
+    Registro.CloseKey;
+    except
+       MessageDlg('No se pudo config. el auto-inicio, de la utilidad de actualizacion automatica de Easy System', mtWarning, [mbOK], 0);
+  end;
+
+  Registro.Free;
+  end;
+  end;
+/////////////////////////////INICIAR CON WINDOWS: FIN
+
 /////////////////////////////PROBANDO CONEXION: INICIO
 Procedure TForm1.Probar_Conexion;
 begin
@@ -137,15 +170,26 @@ end;
 
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: INICIO
 Procedure TForm1.Rev_Nueva_Act;
-
 begin
+Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
-if Num1 < Num2 then
- begin
+    Num1:=StrToInt(Ini2.ReadString('ComboBox1', 'Num_Act', ''));
+    SQLConnection1.Open;
+    SimpleDataSet1.Open;
+    Num2:= SimpleDataSet1UPGRADE.AsInteger;
+    SimpleDataSet1.Close;
+  if Num1 < Num2 then
+  begin
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
- Label2.Caption:= 'Copiando Rars';
+shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
+
+ Label2.Caption:= 'Copiando Rars...';
  Copiando_Rars;
-end;
+  end
+  else begin
+  Label2.Caption:= 'No hay Actualizaciones';
+  Timer2.Enabled:=True;
+  end;
 end;
 ///////////////////////////////COPIANDO RAR'S: INICIO
 Procedure TForm1.Copiando_Rars;
@@ -173,9 +217,9 @@ end;
 
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: INICIO
 Procedure TForm1.Descomprimir_Rars;
-var i:integer; Unrar, sql:String;
+var i:integer; Unrar,Ruta_Es_Exe, sql:String;
 begin
-Label2.Caption:= 'Descomprimiendo Rars';
+Label2.Caption:= 'Descomprimiendo Rars...';
 Unrar:=Ruta+'Unrar.bat';
 //Unrar:='x -y "'+Ruta+'Easy_System_S2010.part01.rar" '+'"'+Ruta+'"';
 //ShellExecute(Form1.Handle,nil,PChar(Ruta_Winrar),Pchar(Unrar),'',SW_NORMAL);
@@ -186,14 +230,24 @@ For i:= 25 to 75 do
 Gauge1.Progress:= i;
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: FIN
 
+Label2.Caption:= 'Modificando Base de Datos...';
 sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +Terminal +' + 1';
 SQLConnection1.Execute(sql, nil, nil);
 Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
+For i:= 75 to 100 do
+Gauge1.Progress:= i;
+Label2.Caption:= 'Actualizacion Terminada';
+Ruta_Es_Exe:= Ruta+'Easy_System_S2010.exe';
+//shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
+Label2.Caption:='';
+Timer2.Enabled:= True;
+Label2.Caption:= 'ACTUALIZADO';
+Gauge1.Progress:= 0;
 end;
 
 
-///////////////////////////////BORRANDO RAR'S: INICIO
+///////////////////////////////BORRANDO RAR'S: INICIO  no en uso
 Procedure TForm1.Borrar_Rars;
 var File_Existe: String; lpFileOp2: TSHFileOpStruct;
 begin
@@ -225,7 +279,7 @@ if ExisteArchivo(File_Existe) = False then
 procedure TForm1.BitBtn1Click(Sender: TObject);
 
 begin
- Descomprimir_Rars;
+Descomprimir_Rars;
 end;
 
 
@@ -250,6 +304,7 @@ procedure TForm1.CrearArchivoBat(rutArchivo: string);
 
 procedure TForm1.BitBtn2Click(Sender: TObject);
 begin
+PonerProgramaInicio;
  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   try
     Ini.WriteString( 'ComboBox1', 'Terminal', CbTerminal.Text);
@@ -264,6 +319,8 @@ begin
     Ini.Free;
 
   end;
+   Form1.Close;
+   shellexecute(Handle, 'open',PChar( ExtractFileName( Application.ExeName )),nil,nil,SW_NORMAL);
 end;
 
 
@@ -271,6 +328,9 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+Form1.Top:= Screen.WorkAreaHeight -187;
+Form1.Left:= Screen.WorkAreaWidth -597;
+TrayIcon1.Show;
 Timer1.Enabled:= True;
 SQLConnection1.Close;
 SimpleDataSet1.Connection:= SQLConnection1;
@@ -284,12 +344,12 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     Ruta:=        Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
     Ruta_Winrar:=Ini2.ReadString(  'ComboBox1', 'Ruta_Winrar', '' );
     Ruta_Act:=   Ini2.ReadString(  'ComboBox1', 'Ruta_Act', '' );
-    Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
+    //Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
     SQLConnection1.Open;
     SimpleDataSet1.Open;
     Num2:= SimpleDataSet1UPGRADE.AsInteger;
     SimpleDataSet1.Close;
-   
+    
   if Configurado = 'SI' then
     begin
    CbTerminal.Visible:= False;
@@ -298,6 +358,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
+   Probar_Conexion;
   end;
    //if Terminal = 'Adm_Soporte' then begin
 
@@ -368,7 +429,34 @@ end;
 end;
 procedure TForm1.Timer1Timer(Sender: TObject);
 begin
-ShowMessage('Han Pasado 15 Minutos');
+Probar_Conexion;
+end;
+
+procedure TForm1.ActualizarAhora1Click(Sender: TObject);
+begin
+Copiando_Rars;
+end;
+
+procedure TForm1.CerrarActualizador1Click(Sender: TObject);
+begin
+Form1.Close;
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+Action:= Cafree;
+end;
+
+procedure TForm1.Timer2Timer(Sender: TObject);
+begin
+Form1.Top:= Screen.WorkAreaHeight +187;
+Form1.Left:= Screen.WorkAreaWidth +597;
+end;
+
+procedure TForm1.MostrarActualizador1Click(Sender: TObject);
+begin
+Form1.Top:= Screen.WorkAreaHeight -187;
+Form1.Left:= Screen.WorkAreaWidth -597;
 end;
 
 end.
