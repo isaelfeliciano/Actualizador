@@ -32,8 +32,15 @@ object Form1: TForm1
     Width = 587
     Height = 28
     Color = 16744448
+    ForeColor = 16744448
     ParentColor = False
     Progress = 0
+  end
+  object Label2: TLabel
+    Left = 0
+    Top = 72
+    Width = 3
+    Height = 13
   end
   object BitBtn1: TBitBtn
     Left = 448
@@ -155,8 +162,23 @@ object Form1: TForm1
     TabOrder = 7
     Text = 'Ruta Dir App'
     Items.Strings = (
-      'C:\Archivos de programa\WinRAR\rar.exe'
-      'C:\Program Files\WinRAR\rar.exe')
+      'C:\Archivos de programa\WinRAR\'
+      'C:\Program Files\WinRAR\')
+  end
+  object CbRuta_Act: TComboBox
+    Left = 0
+    Top = 104
+    Width = 121
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 8
+    Text = 'Ruta Act'
+    Items.Strings = (
+      'C:\Actualizaciones\*.*'
+      'D:\Actualizaciones\*.*'
+      'E:\Actualizaciones\*.*'
+      'F:\Actualizaciones\*.*'
+      'G:\Actualizaciones\*.*')
   end
   object SQLConnection1: TSQLConnection
     ConnectionName = 'IBConnection'
@@ -166,7 +188,7 @@ object Form1: TForm1
     LoginPrompt = False
     Params.Strings = (
       'DriverName=Interbase'
-      'Database=10.0.0.15:D:\Easy System News\DATA.FDB'
+      'Database='
       'RoleName=RoleName'
       'User_Name=SYSDBA'
       'Password=juan173mateo69'
@@ -180,12 +202,11 @@ object Form1: TForm1
       'Interbase TransIsolation=ReadCommited'
       'Trim Char=True')
     VendorLib = 'gds32.dll'
-    Connected = True
+    BeforeConnect = SQLConnection1BeforeConnect
     Left = 392
     Top = 8
   end
   object SimpleDataSet1: TSimpleDataSet
-    Active = True
     Aggregates = <>
     Connection = SQLConnection1
     DataSet.CommandText = 'select * from ACTUALIZADOR'
@@ -555,7 +576,6 @@ object Form1: TForm1
   object IdIcmpClient1: TIdIcmpClient
     Host = '10.0.0.15'
     Port = 21
-    OnReply = IdIcmpClient1Reply
     Left = 472
     Top = 8
   end

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
-  Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry;
+  Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls;
 
 type
   TForm1 = class(TForm)
@@ -62,6 +62,9 @@ type
     BitBtn4: TBitBtn;
     CbRutaApp: TComboBox;
     Gauge1: TGauge;
+    CbRuta_Act: TComboBox;
+    Label2: TLabel;
+    Timer1: TTimer;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -69,10 +72,17 @@ type
     procedure FormCreate(Sender: TObject);
     procedure BitBtn3Click(Sender: TObject);
     procedure BitBtn4Click(Sender: TObject);
+    procedure SQLConnection1BeforeConnect(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
 
 
   private
   Procedure Probar_Conexion;
+  Procedure Rev_Nueva_Act;
+  Procedure Descomprimir_Rars;
+  Procedure Borrar_Rars;
+  procedure CrearArchivoBat(rutArchivo: string);
+  Procedure Copiando_Rars;
   public
 
   end;
@@ -80,14 +90,28 @@ type
 var
   Form1: TForm1;
   Ini, Ini2  : TIniFile;
-  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar, IpServidor, Modo: String;
+  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo: String;
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
+  Hora_Mod: TDateTime;
 implementation
 
 {$R *.dfm}
 
-//PROBANDO CONEXION: INICIO
+function ExisteArchivo(Ruta:string):boolean;
+begin
+      if (FileExists(Ruta)) then
+      begin
+         //Existe
+        Result:=true;
+      end
+     else
+     begin
+        //No Existe
+        Result:=false;
+     end;
+end;
+/////////////////////////////PROBANDO CONEXION: INICIO
 Procedure TForm1.Probar_Conexion;
 begin
 if Modo = 'Local' then
@@ -102,31 +126,128 @@ IdIcmpClient1.Ping;
 if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
     begin
       Label1.Caption:= 'No Conectado';
+
     end else begin
       Label1.Caption:= 'Conectado '+ IpServidor;
+       Rev_Nueva_Act;
     end;
 
 end;
-//PROBANDO CONEXION: FIN
+///////////////////////////////PROBANDO CONEXION: FIN
 
-procedure TForm1.BitBtn1Click(Sender: TObject);
-var lpFileOp2: TSHFileOpStruct; Unrar:String;
+///////////////////////////////REVISANDO NUEVA ACTUALIZACION: INICIO
+Procedure TForm1.Rev_Nueva_Act;
+
 begin
-Unrar:='x "'+Ruta+'Easy_System_S2010.part01.rar" '+'"'+Ruta+'"';
-ShellExecute(Form1.Handle,nil,PChar(Ruta_Winrar),Pchar(Unrar),'',SW_HIDE);
+
+if Num1 < Num2 then
+ begin
+///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
+ Label2.Caption:= 'Copiando Rars';
+ Copiando_Rars;
+end;
+end;
+///////////////////////////////COPIANDO RAR'S: INICIO
+Procedure TForm1.Copiando_Rars;
+var lpFileOp: TSHFileOpStruct; i: Integer;
+begin
+    lpFileOp.Wnd := Self.Handle;
+    lpFileOp.wFunc := FO_COPY;
+    lpFileOp.pFrom := PChar(Ruta_Act + #0#0);
+    lpFileOp.pTo := PChar(Ruta + #0#0);
+    lpFileOp.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY or FOF_NOCONFIRMATION;
+    lpFileOp.fAnyOperationsAborted := FALSE;
+    lpFileOp.hNameMappings := nil;
+    lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
+
+
+    { Mover el archivo }
+    SHFileOperation(lpFileOp);
+For i:= 0 to 25 do
+Gauge1.Progress:= i;
+Descomprimir_Rars;
+
+end;
+///////////////////////////////COPIANDO RAR'S: FIN
+
+
+///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: INICIO
+Procedure TForm1.Descomprimir_Rars;
+var i:integer; Unrar, sql:String;
+begin
+Label2.Caption:= 'Descomprimiendo Rars';
+Unrar:=Ruta+'Unrar.bat';
+//Unrar:='x -y "'+Ruta+'Easy_System_S2010.part01.rar" '+'"'+Ruta+'"';
+//ShellExecute(Form1.Handle,nil,PChar(Ruta_Winrar),Pchar(Unrar),'',SW_NORMAL);
 //ShellExecute(Handle, 'Open', 'C:\Archivos de programa\WinRAR\rar.exe', 'x "D:\Easy System S2010\Easy_System_S2010.part01.rar" '+'"'+Ruta+'"', nil, SW_HIDE);
-    { Relleno de la estructura }
-    {lpFileOp2.Wnd := Self.Handle;
+CrearArchivoBat(Ruta+'Unrar.bat');
+shellexecute(Handle, 'open',Pchar(Unrar),nil,nil,SW_HIDE);
+For i:= 25 to 75 do
+Gauge1.Progress:= i;
+///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: FIN
+
+sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +Terminal +' + 1';
+SQLConnection1.Execute(sql, nil, nil);
+Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
+Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
+end;
+
+
+///////////////////////////////BORRANDO RAR'S: INICIO
+Procedure TForm1.Borrar_Rars;
+var File_Existe: String; lpFileOp2: TSHFileOpStruct;
+begin
+{File_Existe:= Ruta+'Easy_System_S2010.exe';
+if ExisteArchivo(File_Existe) = False then
+  begin
+    Borrar_Rars;
+    end
+    else
+    begin
+    lpFileOp2.Wnd := Self.Handle;
     lpFileOp2.wFunc := FO_DELETE;
-    lpFileOp2.pFrom := PChar('D:\Easy System S2010\Easy_System_S2010.*.rar' + #0#0);
+    lpFileOp2.pFrom := PChar(Ruta+'Easy_System_S2010.*.rar' + #0#0);
     lpFileOp2.pTo := nil;
     lpFileOp2.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY or FOF_NOCONFIRMATION;
     lpFileOp2.fAnyOperationsAborted := FALSE;
     lpFileOp2.hNameMappings := nil;
     lpFileOp2.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
-    { Mover el archivo }
-    //SHFileOperation(lpFileOp2);
+
+
+    SHFileOperation(lpFileOp2);
+    end;}
+
+
+  end;
+
+
+///////////////////////////////BORRANDO RAR'S: FIN
+procedure TForm1.BitBtn1Click(Sender: TObject);
+
+begin
+ Descomprimir_Rars;
 end;
+
+
+//////////////////////////////AUTOCREANDO BAT: INICIO
+procedure TForm1.CrearArchivoBat(rutArchivo: string);
+ var
+   temp: TStrings;
+ begin
+   temp := TStringList.Create;
+   try
+     temp.Add('@echo off');
+     temp.Add('path='+Ruta_Winrar);
+     temp.Add('rar.exe x -y "'+ Ruta+'Easy_System_S2010.*.rar" "' + Ruta);
+     temp.Add('Path=D:\Easy System S2010\');
+     temp.Add('del /q "'+Ruta+'Easy_System_S2010.*.rar"');
+     temp.SaveToFile(rutArchivo);
+   finally
+     temp.Free;
+   end;
+ end;
+//////////////////////////////AUTOCREANDO BAT: FIN
+
 procedure TForm1.BitBtn2Click(Sender: TObject);
 begin
  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
@@ -136,8 +257,9 @@ begin
     Ini.WriteString( 'ComboBox1', 'Rutas', CbRutaES.Text );
     Ini.WriteString( 'ComboBox1', 'Iniciado?', 'SI' );
     Ini.WriteString( 'ComboBox1', 'Ruta_Winrar', CbRutaApp.Text );
-    //Ini.WriteString( 'ComboBox1', 'Num_Act', '' );
-    Ini.WriteBool( 'Form', 'InitMax', WindowState = wsMaximized );
+    Ini.WriteString( 'ComboBox1', 'Ruta_Act', CbRuta_Act.Text );
+    Ini.WriteString( 'ComboBox1', 'Num_Act', '1' );
+
   finally
     Ini.Free;
 
@@ -149,6 +271,9 @@ end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+Timer1.Enabled:= True;
+SQLConnection1.Close;
+SimpleDataSet1.Connection:= SQLConnection1;
 Cad3:='ADM_SOPORTE';
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
@@ -156,17 +281,23 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     Terminal:=    Ini2.ReadString( 'ComboBox1', 'Terminal', '' );
     Modo:=        Ini2.ReadString( 'ComboBox1', 'Modo', '' );
     Num1:=StrToInt(Ini2.ReadString('ComboBox1', 'Num_Act', ''));
-    Num2:= SimpleDataSet1UPGRADE.AsInteger;
     Ruta:=        Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
-    Ruta_Winrar:=Ini2.ReadString( 'ComboBox1', 'Ruta_Winrar', '' );
-
-
-
+    Ruta_Winrar:=Ini2.ReadString(  'ComboBox1', 'Ruta_Winrar', '' );
+    Ruta_Act:=   Ini2.ReadString(  'ComboBox1', 'Ruta_Act', '' );
+    Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
+    SQLConnection1.Open;
+    SimpleDataSet1.Open;
+    Num2:= SimpleDataSet1UPGRADE.AsInteger;
+    SimpleDataSet1.Close;
+   
   if Configurado = 'SI' then
     begin
    CbTerminal.Visible:= False;
    CbModo.Visible:= False;
    BitBtn2.Visible:=False;
+   CbRutaES.Visible:= False;
+   CbRutaApp.Visible:= False;
+   CbRuta_Act.Visible:= False;
   end;
    //if Terminal = 'Adm_Soporte' then begin
 
@@ -200,7 +331,7 @@ begin
     lpFileOp.hNameMappings := nil;
     lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
     ProgressBar1.Position:= 50;
-   
+
     { Mover el archivo }
     //SHFileOperation(lpFileOp);
 
@@ -212,66 +343,32 @@ end;
 end;
 procedure TForm1.BitBtn4Click(Sender: TObject);
 begin
-if Modo = 'Local' then
-    IpServidor:= '10.0.0.15';
-
-      ShowMessage(IpServidor);
+Copiando_Rars;
 end;
 
-Function Letra_Sistema: String;
-var
-  WinDir: PChar;
-  R, NOB: String;
-  En_C, Con_Inf: Boolean;
-begin
-  GetMem(WinDir, 144);
-  GetWindowsDirectory(WinDir, 144);
-  R:= Copy(WinDir, 0, 3);
-  end;
-Function AGregarSlash(S: String):String;
-begin
 
 
-  if S<>'' then begin
-  if Copy(S, Length(S), 1)<>'\' then
-   result:= S+ '\'
-   else result:= S;
-  end else
-     Result:='';
-end;
-Function Carpet_ProgramFilesDir: String;
-var
-  Reg : TRegistry;
-  Ruta, Drive: String;
+
+procedure TForm1.SQLConnection1BeforeConnect(Sender: TObject);
 begin
- Reg := TRegistry.Create;
-  try
-    Reg.RootKey := HKEY_LOCAL_MACHINE;
-    if Reg.OpenKey('\SOFTWARE\Microsoft\Windows\CurrentVersion', True) then
+ with Sender as TSQLConnection do
+  begin
+    if LoginPrompt = False then
     begin
-
-     Ruta:= Reg.ReadString('ProgramFilesDir');
-  
-     if Length(Ruta)<5 then begin
-        Drive:= Letra_Sistema;
-         if DirectoryExists(Drive+'Archivos de programa')then
-            Ruta:= Drive+'Archivos de programa\'
-            else
-         if DirectoryExists(Drive+'Program Files')then
-            Ruta:= Drive+'Program Files\';
-     end;  // fin if Length(Ruta)<5
-     
-     if Length(Ruta)>5 then
-        Ruta:=  AGregarSlash(Ruta);
-      Reg.CloseKey;
+      if Modo = 'Local' then begin
+    IpServidor:= '10.0.0.15';
+    SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
     end;
-  finally
-    Reg.Free;
-
+    if Modo = 'Remoto' then begin
+    IpServidor:= '5.108.175.106';
+    SQLConnection1.Params.Values['Database']:= '5.108.175.106:D:\Easy System News\DATA.FDB';
+    end;
   end;
- Result:=  Ruta
-
-  
-END;
+end;
+end;
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+ShowMessage('Han Pasado 15 Minutos');
+end;
 
 end.
