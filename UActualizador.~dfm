@@ -7,12 +7,7 @@ object Form1: TForm1
   ClientHeight = 187
   ClientWidth = 597
   Color = clBtnHighlight
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'MS Sans Serif'
-  Font.Style = []
-  FormStyle = fsStayOnTop
+  ParentFont = True
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
@@ -1970,6 +1965,21 @@ object Form1: TForm1
     Interval = 3000
     OnTimer = Timer2Timer
     Left = 320
+    Top = 8
+  end
+  object ShellChangeNotifier1: TShellChangeNotifier
+    NotifyFilters = [nfSizeChange, nfWriteChange]
+    Root = 'D:\Easy System S2010\Actualizador'
+    WatchSubTree = True
+    OnChange = ShellChangeNotifier1Change
+    Left = 288
+    Top = 8
+  end
+  object Timer3: TTimer
+    Enabled = False
+    Interval = 10000
+    OnTimer = Timer3Timer
+    Left = 248
     Top = 8
   end
 end

@@ -7,7 +7,7 @@ uses
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
   Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls,
-  TrayIcon, jpeg;
+  TrayIcon, jpeg, ShellCtrls;
 
 type
   TForm1 = class(TForm)
@@ -70,6 +70,8 @@ type
     Image1: TImage;
     Timer2: TTimer;
     MostrarActualizador1: TMenuItem;
+    ShellChangeNotifier1: TShellChangeNotifier;
+    Timer3: TTimer;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -84,6 +86,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Timer2Timer(Sender: TObject);
     procedure MostrarActualizador1Click(Sender: TObject);
+    procedure ShellChangeNotifier1Change;
+    procedure Timer3Timer(Sender: TObject);
 
 
   private
@@ -92,9 +96,13 @@ type
   Procedure Descomprimir_Rars;
   Procedure Borrar_Rars;
   procedure CrearArchivoBat(rutArchivo: string);
-  Procedure Copiando_Rars;
+
   procedure PonerProgramaInicio;
+  Procedure AutoAct;
+  procedure CerrarEs;
   public
+  Ruta: String;
+  Procedure Copiando_Rars;
 
   end;
 
@@ -105,7 +113,10 @@ var
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
+  Auto_Act: Boolean;
 implementation
+
+uses UnuevaAct;
 
 {$R *.dfm}
 
@@ -180,19 +191,39 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     SimpleDataSet1.Close;
   if Num1 < Num2 then
   begin
+  Timer2.Enabled:= False;
+  Form1.Top:= Screen.WorkAreaHeight -187;
+  Form1.Left:= Screen.WorkAreaWidth -597;
+  CerrarEs;
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
- Label2.Caption:= 'Copiando Rars...';
+//shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
+
+ {Label2.Caption:= 'Copiando Rars...';
  Copiando_Rars;
   end
   else begin
   Label2.Caption:= 'No hay Actualizaciones';
-  Timer2.Enabled:=True;
+  Timer2.Enabled:=True;}
   end;
 end;
+
+///////////////////////////////CERRANDO ES: INICIO
+Procedure TForm1.CerrarEs;
+begin
+Application.CreateForm(TFNuevaAct, FNuevaAct);
+
+
+end;
+///////////////////////////////CERRANDO ES: FIN
+
 ///////////////////////////////COPIANDO RAR'S: INICIO
 Procedure TForm1.Copiando_Rars;
 var lpFileOp: TSHFileOpStruct; i: Integer;
 begin
+FNuevaAct.Close;
+Form1.Top:= Screen.WorkAreaHeight -187;
+Form1.Left:= Screen.WorkAreaWidth -597;
+
     lpFileOp.Wnd := Self.Handle;
     lpFileOp.wFunc := FO_COPY;
     lpFileOp.pFrom := PChar(Ruta_Act + #0#0);
@@ -237,10 +268,11 @@ For i:= 75 to 100 do
 Gauge1.Progress:= i;
 Label2.Caption:= 'Actualizacion Terminada';
 Ruta_Es_Exe:= Ruta+'Easy_System_S2010.exe';
-shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
+//shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
 Label2.Caption:='';
 Timer2.Enabled:= True;
 Label2.Caption:= 'ACTUALIZADO';
+Gauge1.Progress:= 0;
 end;
 
 
@@ -346,7 +378,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     SimpleDataSet1.Open;
     Num2:= SimpleDataSet1UPGRADE.AsInteger;
     SimpleDataSet1.Close;
-    
+    Timer2.Enabled:= True;
   if Configurado = 'SI' then
     begin
    CbTerminal.Visible:= False;
@@ -355,7 +387,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
-   Probar_Conexion;
+
   end;
    //if Terminal = 'Adm_Soporte' then begin
 
@@ -441,19 +473,52 @@ end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-Action:= Cafree;
-end;
 
+Action:= Cafree;
+
+
+
+end;
 procedure TForm1.Timer2Timer(Sender: TObject);
 begin
+Probar_Conexion;
 Form1.Top:= Screen.WorkAreaHeight +187;
 Form1.Left:= Screen.WorkAreaWidth +597;
+Timer2.Enabled:= False;
 end;
 
 procedure TForm1.MostrarActualizador1Click(Sender: TObject);
 begin
 Form1.Top:= Screen.WorkAreaHeight -187;
 Form1.Left:= Screen.WorkAreaWidth -597;
+end;
+
+procedure TForm1.ShellChangeNotifier1Change;
+begin
+Timer3.Enabled:= True;
+end;
+
+Procedure TForm1.AutoAct;
+var lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
+begin
+Ruta_AutoAct:= Ruta+'Actualizador\*.*';
+    lpFileOp.Wnd := Self.Handle;
+    lpFileOp.wFunc := FO_COPY;
+    lpFileOp.pFrom := PChar(Ruta_AutoAct + #0#0);
+    lpFileOp.pTo := PChar(Ruta + #0#0);
+    lpFileOp.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY or FOF_NOCONFIRMATION;
+    lpFileOp.fAnyOperationsAborted := FALSE;
+    lpFileOp.hNameMappings := nil;
+    lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
+    Form1.Close;
+
+    { Mover el archivo }
+    SHFileOperation(lpFileOp);
+end;
+
+procedure TForm1.Timer3Timer(Sender: TObject);
+begin
+AutoAct;
 end;
 
 end.
