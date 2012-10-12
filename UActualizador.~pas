@@ -360,7 +360,7 @@ procedure TForm1.CrearArchivoBat(rutArchivo: string);
 
 procedure TForm1.BitBtn2Click(Sender: TObject);
 begin
-PonerProgramaInicio;
+//PonerProgramaInicio;
  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   try
     Ini.WriteString( 'ComboBox1', 'Terminal', CbTerminal.Text);
@@ -526,6 +526,7 @@ end;
 Procedure TForm1.AutoAct;
 var lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
 begin
+Timer3.Enabled:= False;
 Ruta_AutoAct:= Ruta+'Actualizador\*.*';
     lpFileOp.Wnd := Self.Handle;
     lpFileOp.wFunc := FO_COPY;

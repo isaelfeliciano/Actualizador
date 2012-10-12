@@ -1974,7 +1974,6 @@ object Form1: TForm1
   end
   object ShellChangeNotifier1: TShellChangeNotifier
     NotifyFilters = [nfSizeChange, nfWriteChange]
-    Root = 'D:\Easy System S2010\Actualizador'
     WatchSubTree = True
     OnChange = ShellChangeNotifier1Change
     Left = 288
@@ -1982,7 +1981,7 @@ object Form1: TForm1
   end
   object Timer3: TTimer
     Enabled = False
-    Interval = 10000
+    Interval = 30000
     OnTimer = Timer3Timer
     Left = 248
     Top = 8

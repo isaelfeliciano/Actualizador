@@ -400,6 +400,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     Ruta:=        Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
     Ruta_Winrar:=Ini2.ReadString(  'ComboBox1', 'Ruta_Winrar', '' );
     Ruta_Act:=   Ini2.ReadString(  'ComboBox1', 'Ruta_Act', '' );
+    ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
     //Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
     SQLConnection1.Open;
     SimpleDataSet1.Open;
@@ -500,7 +501,8 @@ end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-//Action:= Cafree;
+TrayIcon1.Hide;
+Action:= Cafree;
 end;
 
 
@@ -526,6 +528,7 @@ end;
 Procedure TForm1.AutoAct;
 var lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
 begin
+Timer3.Enabled:= False;
 Ruta_AutoAct:= Ruta+'Actualizador\*.*';
     lpFileOp.Wnd := Self.Handle;
     lpFileOp.wFunc := FO_COPY;
