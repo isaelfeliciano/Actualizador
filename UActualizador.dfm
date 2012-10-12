@@ -11,6 +11,7 @@ object Form1: TForm1
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
@@ -1631,7 +1632,7 @@ object Form1: TForm1
   end
   object Timer1: TTimer
     Enabled = False
-    Interval = 900000
+    Interval = 600000
     OnTimer = Timer1Timer
     Left = 504
     Top = 8
@@ -1955,6 +1956,10 @@ object Form1: TForm1
       Caption = 'Mostrar Actualizador'
       OnClick = MostrarActualizador1Click
     end
+    object OcultarActualizador1: TMenuItem
+      Caption = 'Ocultar Actualizador'
+      OnClick = OcultarActualizador1Click
+    end
     object CerrarActualizador1: TMenuItem
       Caption = 'Cerrar Actualizador'
       OnClick = CerrarActualizador1Click
@@ -1980,6 +1985,13 @@ object Form1: TForm1
     Interval = 10000
     OnTimer = Timer3Timer
     Left = 248
+    Top = 8
+  end
+  object Timer4: TTimer
+    Enabled = False
+    Interval = 3000
+    OnTimer = Timer4Timer
+    Left = 216
     Top = 8
   end
 end

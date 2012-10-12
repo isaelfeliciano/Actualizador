@@ -72,6 +72,8 @@ type
     MostrarActualizador1: TMenuItem;
     ShellChangeNotifier1: TShellChangeNotifier;
     Timer3: TTimer;
+    OcultarActualizador1: TMenuItem;
+    Timer4: TTimer;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -88,6 +90,9 @@ type
     procedure MostrarActualizador1Click(Sender: TObject);
     procedure ShellChangeNotifier1Change;
     procedure Timer3Timer(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure OcultarActualizador1Click(Sender: TObject);
+    procedure Timer4Timer(Sender: TObject);
 
 
   private
@@ -103,7 +108,7 @@ type
   public
   Ruta: String;
   Procedure Copiando_Rars;
-
+  Procedure CerrandoEs;
   end;
 
 var
@@ -207,11 +212,33 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   end;
 end;
 
-///////////////////////////////CERRANDO ES: INICIO
+///////////////////////////////CERRAR ES: INICIO
 Procedure TForm1.CerrarEs;
 begin
 Application.CreateForm(TFNuevaAct, FNuevaAct);
+end;
+///////////////////////////////CERRAR ES: FIN
 
+
+///////////////////////////////CERRANDO ES: INICIO
+Procedure TForm1.CerrandoEs;
+var
+   temp: TStrings; Kill_Task: String;
+begin
+Timer4.Enabled:= False;
+Kill_Task:= Form1.Ruta+'Kill_Task.bat';
+   temp := TStringList.Create;
+   try
+     temp.Add('@echo off');
+     temp.Add('taskkill /f /im Easy_System_S2010.exe');
+     temp.SaveToFile(Kill_Task);
+
+   finally
+     temp.Free;
+   end;
+
+shellexecute(Handle, 'open',Pchar(Kill_Task),nil,nil,SW_HIDE);
+Copiando_Rars;
 
 end;
 ///////////////////////////////CERRANDO ES: FIN
@@ -220,7 +247,6 @@ end;
 Procedure TForm1.Copiando_Rars;
 var lpFileOp: TSHFileOpStruct; i: Integer;
 begin
-FNuevaAct.Close;
 Form1.Top:= Screen.WorkAreaHeight -187;
 Form1.Left:= Screen.WorkAreaWidth -597;
 
@@ -260,7 +286,7 @@ Gauge1.Progress:= i;
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: FIN
 
 Label2.Caption:= 'Modificando Base de Datos...';
-sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +Terminal +' + 1';
+sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +IntToStr(Num2);
 SQLConnection1.Execute(sql, nil, nil);
 Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
@@ -273,6 +299,7 @@ Label2.Caption:='';
 Timer2.Enabled:= True;
 Label2.Caption:= 'ACTUALIZADO';
 Gauge1.Progress:= 0;
+ShowMessage('Actualizacion Completa. Puede abrir el SISTEMA');
 end;
 
 
@@ -473,12 +500,10 @@ end;
 
 procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-
-Action:= Cafree;
-
-
-
+//Action:= Cafree;
 end;
+
+
 procedure TForm1.Timer2Timer(Sender: TObject);
 begin
 Probar_Conexion;
@@ -519,6 +544,23 @@ end;
 procedure TForm1.Timer3Timer(Sender: TObject);
 begin
 AutoAct;
+end;
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+ShowWindow(application.Handle, SW_HIDE)
+end;
+
+procedure TForm1.OcultarActualizador1Click(Sender: TObject);
+begin
+Form1.Top:= Screen.WorkAreaHeight +187;
+Form1.Left:= Screen.WorkAreaWidth +597;
+end;
+
+procedure TForm1.Timer4Timer(Sender: TObject);
+begin
+CerrandoEs;
+
 end;
 
 end.

@@ -21,7 +21,6 @@ object FNuevaAct: TFNuevaAct
   Position = poDesktopCenter
   Visible = True
   OnClose = FormClose
-  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
@@ -1146,7 +1145,7 @@ object FNuevaAct: TFNuevaAct
     Top = 32
     Width = 75
     Height = 25
-    Caption = '----->'
+    Caption = 'AHORA'
     TabOrder = 0
     OnClick = BitBtn1Click
   end
@@ -1155,8 +1154,31 @@ object FNuevaAct: TFNuevaAct
     Top = 64
     Width = 75
     Height = 25
-    Caption = '----->'
+    Caption = 'ESPERAR'
     TabOrder = 1
     OnClick = BitBtn2Click
+  end
+  object Memo1: TMemo
+    Left = 104
+    Top = 72
+    Width = 257
+    Height = 73
+    BevelInner = bvNone
+    BevelOuter = bvRaised
+    Ctl3D = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clRed
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    Lines.Strings = (
+      'Si ya termino las operaciones que estaba '
+      'realizando'
+      'Haga clic en el boton para cerrar y '
+      'actualizar AHORA')
+    ParentCtl3D = False
+    ParentFont = False
+    TabOrder = 2
+    Visible = False
   end
 end

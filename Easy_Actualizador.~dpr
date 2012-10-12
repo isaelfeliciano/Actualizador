@@ -2,7 +2,8 @@ program Easy_Actualizador;
 
 uses
   Forms,
-  UActualizador in 'UActualizador.pas' {Form1};
+  UActualizador in 'UActualizador.pas' {Form1},
+  UNuevaAct in 'UNuevaAct.pas' {FNuevaAct};
 
 {$R *.res}
 

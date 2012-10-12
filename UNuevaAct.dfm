@@ -3,7 +3,7 @@ object FNuevaAct: TFNuevaAct
   Top = 416
   BorderIcons = []
   BorderStyle = bsDialog
-  Caption = 'FNuevaAct'
+  Caption = 'Nueva Actualizacion'
   ClientHeight = 157
   ClientWidth = 509
   Color = clBtnFace
@@ -21,7 +21,6 @@ object FNuevaAct: TFNuevaAct
   Position = poDesktopCenter
   Visible = True
   OnClose = FormClose
-  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage

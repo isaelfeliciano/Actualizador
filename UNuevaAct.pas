@@ -17,7 +17,6 @@ type
     Memo1: TMemo;
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormCreate(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
 
   private
@@ -34,33 +33,17 @@ implementation
 {$R *.dfm}
 
 procedure TFNuevaAct.BitBtn1Click(Sender: TObject);
-var
-   temp: TStrings; Kill_Task: String;
+
  begin
-   Kill_Task:= Form1.Ruta+'Kill_Task.bat';
-   temp := TStringList.Create;
-   try
-     temp.Add('@echo off');
-     temp.Add('taskkill /f /im Easy_System_S2010.exe');
-     temp.SaveToFile(Kill_Task);
 
-   finally
-     temp.Free;
-   end;
-
-shellexecute(Handle, 'open',Pchar(Kill_Task),nil,nil,SW_HIDE);
-Form1.Copiando_Rars;
+FNuevaAct.Close;
 
 end;
 
 procedure TFNuevaAct.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+Form1.Timer4.Enabled:= True;
 Action:= Cafree;
-end;
-
-procedure TFNuevaAct.FormCreate(Sender: TObject);
-begin
-FNuevaAct.ShowModal;
 end;
 
 procedure TFNuevaAct.BitBtn2Click(Sender: TObject);

@@ -9,7 +9,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.Title := 'ES Actualizador';
+  Application.Title := 'ES Actualizador v1.0';
   Application.CreateForm(TForm1, Form1);
   Application.Run;
 end.
