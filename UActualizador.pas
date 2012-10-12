@@ -7,7 +7,7 @@ uses
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
   Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls,
-  TrayIcon, jpeg, ShellCtrls;
+  TrayIcon, jpeg, ShellCtrls, SHChangeNotify;
 
 type
   TForm1 = class(TForm)
@@ -74,6 +74,7 @@ type
     Timer3: TTimer;
     OcultarActualizador1: TMenuItem;
     Timer4: TTimer;
+    SHChangeNotify1: TSHChangeNotify;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -93,6 +94,10 @@ type
     procedure FormShow(Sender: TObject);
     procedure OcultarActualizador1Click(Sender: TObject);
     procedure Timer4Timer(Sender: TObject);
+    procedure SHChangeNotify1UpdateDir(Sender: TObject; Flags: Cardinal;
+      Path1: String);
+    procedure SHChangeNotify1Delete(Sender: TObject; Flags: Cardinal;
+      Path1: String);
 
 
   private
@@ -114,7 +119,7 @@ type
 var
   Form1: TForm1;
   Ini, Ini2  : TIniFile;
-  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo: String;
+  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1: String;
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
@@ -400,7 +405,8 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     Ruta:=        Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
     Ruta_Winrar:=Ini2.ReadString(  'ComboBox1', 'Ruta_Winrar', '' );
     Ruta_Act:=   Ini2.ReadString(  'ComboBox1', 'Ruta_Act', '' );
-    ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
+    //ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
+     SHChangeNotify1.Execute;
     //Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
     SQLConnection1.Open;
     SimpleDataSet1.Open;
@@ -522,7 +528,8 @@ end;
 
 procedure TForm1.ShellChangeNotifier1Change;
 begin
-Timer3.Enabled:= True;
+//Timer3.Enabled:= True;
+//ShowMessage('Modificado');
 end;
 
 Procedure TForm1.AutoAct;
@@ -563,7 +570,23 @@ end;
 procedure TForm1.Timer4Timer(Sender: TObject);
 begin
 CerrandoEs;
+end;
 
+procedure TForm1.SHChangeNotify1UpdateDir(Sender: TObject; Flags: Cardinal;
+  Path1: String);
+begin
+//Update_Dir:= Path1;
+if Path1 = Ruta+'Actualizador' then
+begin
+Timer3.Enabled:= True;
+ShowMessage('Modificado');
+end;
+end;
+
+procedure TForm1.SHChangeNotify1Delete(Sender: TObject; Flags: Cardinal;
+  Path1: String);
+begin
+ShowMessage(Path1);
 end;
 
 end.

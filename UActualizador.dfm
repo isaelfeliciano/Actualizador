@@ -1974,8 +1974,8 @@ object Form1: TForm1
   end
   object ShellChangeNotifier1: TShellChangeNotifier
     NotifyFilters = [nfSizeChange, nfWriteChange]
+    Root = 'D:\'
     WatchSubTree = True
-    OnChange = ShellChangeNotifier1Change
     Left = 288
     Top = 8
   end
@@ -1991,6 +1991,12 @@ object Form1: TForm1
     Interval = 3000
     OnTimer = Timer4Timer
     Left = 216
+    Top = 8
+  end
+  object SHChangeNotify1: TSHChangeNotify
+    HardDriveOnly = False
+    OnUpdateDir = SHChangeNotify1UpdateDir
+    Left = 184
     Top = 8
   end
 end
