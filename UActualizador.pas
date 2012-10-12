@@ -579,7 +579,7 @@ begin
 if Path1 = Ruta+'Actualizador' then
 begin
 Timer3.Enabled:= True;
-ShowMessage('Modificado');
+
 end;
 end;
 

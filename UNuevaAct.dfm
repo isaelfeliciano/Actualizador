@@ -1,5 +1,5 @@
 object FNuevaAct: TFNuevaAct
-  Left = 453
+  Left = 407
   Top = 416
   BorderIcons = []
   BorderStyle = bsDialog
