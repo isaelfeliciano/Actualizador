@@ -10,7 +10,7 @@ uses
   TrayIcon, jpeg, ShellCtrls, SHChangeNotify;
 
 type
-  TForm1 = class(TForm)
+  TFActualizador = class(TForm)
     SQLConnection1: TSQLConnection;
     SimpleDataSet1: TSimpleDataSet;
     Label1: TLabel;
@@ -114,12 +114,15 @@ type
   Ruta: String;
   Procedure Copiando_Rars;
   Procedure CerrandoEs;
+  Procedure CompararFecha;
+  Function  GetFileTimes(FileName : string; var Created : TDateTime;
+       var  Modified : TDateTime; var Accessed : TDateTime) : boolean;
   end;
 
 var
-  Form1: TForm1;
+  FActualizador: TFActualizador;
   Ini, Ini2  : TIniFile;
-  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1: String;
+  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1, Fecha1, Fecha2: String;
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
@@ -144,7 +147,7 @@ begin
      end;
 end;
 /////////////////////////////INICIAR CON WINDOWS: INICIO
-procedure TForm1.PonerProgramaInicio;
+procedure TFActualizador.PonerProgramaInicio;
 var Registro: TRegistry;
 begin
 
@@ -166,7 +169,7 @@ begin
 /////////////////////////////INICIAR CON WINDOWS: FIN
 
 /////////////////////////////PROBANDO CONEXION: INICIO
-Procedure TForm1.Probar_Conexion;
+Procedure TFActualizador.Probar_Conexion;
 begin
 if Modo = 'Local' then
     IpServidor:= '10.0.0.15';
@@ -190,7 +193,7 @@ end;
 ///////////////////////////////PROBANDO CONEXION: FIN
 
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: INICIO
-Procedure TForm1.Rev_Nueva_Act;
+Procedure TFActualizador.Rev_Nueva_Act;
 begin
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
@@ -202,8 +205,8 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   if Num1 < Num2 then
   begin
   Timer2.Enabled:= False;
-  Form1.Top:= Screen.WorkAreaHeight -187;
-  Form1.Left:= Screen.WorkAreaWidth -597;
+  FActualizador.Top:= Screen.WorkAreaHeight -187;
+  FActualizador.Left:= Screen.WorkAreaWidth -597;
   CerrarEs;
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
 //shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
@@ -218,7 +221,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 end;
 
 ///////////////////////////////CERRAR ES: INICIO
-Procedure TForm1.CerrarEs;
+Procedure TFActualizador.CerrarEs;
 begin
 Application.CreateForm(TFNuevaAct, FNuevaAct);
 end;
@@ -226,12 +229,12 @@ end;
 
 
 ///////////////////////////////CERRANDO ES: INICIO
-Procedure TForm1.CerrandoEs;
+Procedure TFActualizador.CerrandoEs;
 var
    temp: TStrings; Kill_Task: String;
 begin
 Timer4.Enabled:= False;
-Kill_Task:= Form1.Ruta+'Kill_Task.bat';
+Kill_Task:= FActualizador.Ruta+'Kill_Task.bat';
    temp := TStringList.Create;
    try
      temp.Add('@echo off');
@@ -249,11 +252,11 @@ end;
 ///////////////////////////////CERRANDO ES: FIN
 
 ///////////////////////////////COPIANDO RAR'S: INICIO
-Procedure TForm1.Copiando_Rars;
+Procedure TFActualizador.Copiando_Rars;
 var lpFileOp: TSHFileOpStruct; i: Integer;
 begin
-Form1.Top:= Screen.WorkAreaHeight -187;
-Form1.Left:= Screen.WorkAreaWidth -597;
+FActualizador.Top:= Screen.WorkAreaHeight -187;
+FActualizador.Left:= Screen.WorkAreaWidth -597;
 
     lpFileOp.Wnd := Self.Handle;
     lpFileOp.wFunc := FO_COPY;
@@ -276,7 +279,7 @@ end;
 
 
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: INICIO
-Procedure TForm1.Descomprimir_Rars;
+Procedure TFActualizador.Descomprimir_Rars;
 var i:integer; Unrar,Ruta_Es_Exe, sql:String;
 begin
 Label2.Caption:= 'Descomprimiendo Rars...';
@@ -309,7 +312,7 @@ end;
 
 
 ///////////////////////////////BORRANDO RAR'S: INICIO  no en uso
-Procedure TForm1.Borrar_Rars;
+Procedure TFActualizador.Borrar_Rars;
 var File_Existe: String; lpFileOp2: TSHFileOpStruct;
 begin
 {File_Existe:= Ruta+'Easy_System_S2010.exe';
@@ -337,7 +340,7 @@ if ExisteArchivo(File_Existe) = False then
 
 
 ///////////////////////////////BORRANDO RAR'S: FIN
-procedure TForm1.BitBtn1Click(Sender: TObject);
+procedure TFActualizador.BitBtn1Click(Sender: TObject);
 
 begin
 Descomprimir_Rars;
@@ -345,7 +348,7 @@ end;
 
 
 //////////////////////////////AUTOCREANDO BAT: INICIO
-procedure TForm1.CrearArchivoBat(rutArchivo: string);
+procedure TFActualizador.CrearArchivoBat(rutArchivo: string);
  var
    temp: TStrings;
  begin
@@ -363,7 +366,7 @@ procedure TForm1.CrearArchivoBat(rutArchivo: string);
  end;
 //////////////////////////////AUTOCREANDO BAT: FIN
 
-procedure TForm1.BitBtn2Click(Sender: TObject);
+procedure TFActualizador.BitBtn2Click(Sender: TObject);
 begin
 //PonerProgramaInicio;
  Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
@@ -380,17 +383,17 @@ begin
     Ini.Free;
 
   end;
-   Form1.Close;
+   FActualizador.Close;
    shellexecute(Handle, 'open',PChar( ExtractFileName( Application.ExeName )),nil,nil,SW_NORMAL);
 end;
 
 
 
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TFActualizador.FormCreate(Sender: TObject);
 begin
-Form1.Top:= Screen.WorkAreaHeight -187;
-Form1.Left:= Screen.WorkAreaWidth -597;
+FActualizador.Top:= Screen.WorkAreaHeight -187;
+FActualizador.Left:= Screen.WorkAreaWidth -597;
 TrayIcon1.Show;
 Timer1.Enabled:= True;
 SQLConnection1.Close;
@@ -434,7 +437,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 end;
 
 
-procedure TForm1.BitBtn3Click(Sender: TObject);
+procedure TFActualizador.BitBtn3Click(Sender: TObject);
 var lpFileOp: TSHFileOpStruct;
 begin
 Probar_Conexion;
@@ -465,7 +468,7 @@ begin
 end;
 end;
 end;
-procedure TForm1.BitBtn4Click(Sender: TObject);
+procedure TFActualizador.BitBtn4Click(Sender: TObject);
 begin
 Copiando_Rars;
 end;
@@ -473,7 +476,7 @@ end;
 
 
 
-procedure TForm1.SQLConnection1BeforeConnect(Sender: TObject);
+procedure TFActualizador.SQLConnection1BeforeConnect(Sender: TObject);
 begin
  with Sender as TSQLConnection do
   begin
@@ -490,49 +493,49 @@ begin
   end;
 end;
 end;
-procedure TForm1.Timer1Timer(Sender: TObject);
+procedure TFActualizador.Timer1Timer(Sender: TObject);
 begin
 Probar_Conexion;
 end;
 
-procedure TForm1.ActualizarAhora1Click(Sender: TObject);
+procedure TFActualizador.ActualizarAhora1Click(Sender: TObject);
 begin
 Copiando_Rars;
 end;
 
-procedure TForm1.CerrarActualizador1Click(Sender: TObject);
+procedure TFActualizador.CerrarActualizador1Click(Sender: TObject);
 begin
-Form1.Close;
+FActualizador.Close;
 end;
 
-procedure TForm1.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFActualizador.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 TrayIcon1.Hide;
 Action:= Cafree;
 end;
 
 
-procedure TForm1.Timer2Timer(Sender: TObject);
+procedure TFActualizador.Timer2Timer(Sender: TObject);
 begin
 Probar_Conexion;
-Form1.Top:= Screen.WorkAreaHeight +187;
-Form1.Left:= Screen.WorkAreaWidth +597;
+FActualizador.Top:= Screen.WorkAreaHeight +187;
+FActualizador.Left:= Screen.WorkAreaWidth +597;
 Timer2.Enabled:= False;
 end;
 
-procedure TForm1.MostrarActualizador1Click(Sender: TObject);
+procedure TFActualizador.MostrarActualizador1Click(Sender: TObject);
 begin
-Form1.Top:= Screen.WorkAreaHeight -187;
-Form1.Left:= Screen.WorkAreaWidth -597;
+FActualizador.Top:= Screen.WorkAreaHeight -187;
+FActualizador.Left:= Screen.WorkAreaWidth -597;
 end;
 
-procedure TForm1.ShellChangeNotifier1Change;
+procedure TFActualizador.ShellChangeNotifier1Change;
 begin
 //Timer3.Enabled:= True;
 //ShowMessage('Modificado');
 end;
 
-Procedure TForm1.AutoAct;
+Procedure TFActualizador.AutoAct;
 var lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
 begin
 Timer3.Enabled:= False;
@@ -545,34 +548,34 @@ Ruta_AutoAct:= Ruta+'Actualizador\*.*';
     lpFileOp.fAnyOperationsAborted := FALSE;
     lpFileOp.hNameMappings := nil;
     lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
-    Form1.Close;
+    FActualizador.Close;
 
     { Mover el archivo }
     SHFileOperation(lpFileOp);
 end;
 
-procedure TForm1.Timer3Timer(Sender: TObject);
+procedure TFActualizador.Timer3Timer(Sender: TObject);
 begin
 AutoAct;
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TFActualizador.FormShow(Sender: TObject);
 begin
 ShowWindow(application.Handle, SW_HIDE)
 end;
 
-procedure TForm1.OcultarActualizador1Click(Sender: TObject);
+procedure TFActualizador.OcultarActualizador1Click(Sender: TObject);
 begin
-Form1.Top:= Screen.WorkAreaHeight +187;
-Form1.Left:= Screen.WorkAreaWidth +597;
+FActualizador.Top:= Screen.WorkAreaHeight +187;
+FActualizador.Left:= Screen.WorkAreaWidth +597;
 end;
 
-procedure TForm1.Timer4Timer(Sender: TObject);
+procedure TFActualizador.Timer4Timer(Sender: TObject);
 begin
 CerrandoEs;
 end;
 
-procedure TForm1.SHChangeNotify1UpdateDir(Sender: TObject; Flags: Cardinal;
+procedure TFActualizador.SHChangeNotify1UpdateDir(Sender: TObject; Flags: Cardinal;
   Path1: String);
 begin
 //Update_Dir:= Path1;
@@ -583,10 +586,92 @@ Timer3.Enabled:= True;
 end;
 end;
 
-procedure TForm1.SHChangeNotify1Delete(Sender: TObject; Flags: Cardinal;
+procedure TFActualizador.SHChangeNotify1Delete(Sender: TObject; Flags: Cardinal;
   Path1: String);
 begin
 ShowMessage(Path1);
 end;
+
+////////////////////////////////FUNCION OBTENER FECHA DE ARCHIVO: INICIO
+function TFActualizador.GetFileTimes(FileName : string; var Created : TDateTime;
+    var Modified : TDateTime; var Accessed : TDateTime) : boolean;
+var
+   FileHandle : integer;
+   Retvar : boolean;
+   FTimeC,FTimeA,FTimeM : TFileTime;
+   LTime : TFileTime;
+   STime : TSystemTime;
+begin
+  // Abrir el fichero
+  FileHandle := FileOpen(FileName,fmShareDenyNone);
+  // inicializar
+  Created := 0.0;
+  Modified := 0.0;
+  Accessed := 0.0;
+  // Ha tenido acceso al fichero?
+  if FileHandle < 0 then
+    RetVar := false
+  else begin
+ 
+    // Obtener las fechas
+    RetVar := true;
+    GetFileTime(FileHandle,@FTimeC,@FTimeA,@FTimeM);
+    // Cerrar
+    FileClose(FileHandle);
+    // Creado
+    FileTimeToLocalFileTime(FTimeC,LTime);
+ 
+    if FileTimeToSystemTime(LTime,STime) then begin
+      Created := EncodeDate(STime.wYear,STime.wMonth,STime.wDay);
+      Created := Created + EncodeTime(STime.wHour,STime.wMinute,
+              STime.wSecond, STime.wMilliSeconds);
+    end;
+ 
+    // Accedido
+    FileTimeToLocalFileTime(FTimeA,LTime);
+ 
+    if FileTimeToSystemTime(LTime,STime) then begin
+      Accessed := EncodeDate(STime.wYear,STime.wMonth,STime.wDay);
+      Accessed := Accessed + EncodeTime(STime.wHour,STime.wMinute,
+              STime.wSecond, STime.wMilliSeconds);
+    end;
+ 
+    // Modificado
+    FileTimeToLocalFileTime(FTimeM,LTime);
+ 
+    if FileTimeToSystemTime(LTime,STime) then begin
+      Modified := EncodeDate(STime.wYear,STime.wMonth,STime.wDay);
+      Modified := Modified + EncodeTime(STime.wHour,STime.wMinute,
+                     STime.wSecond, STime.wMilliSeconds);
+    end;
+  end;
+  Result := RetVar;
+end;
+////////////////////////////////FUNCION OBTENER FECHA DE ARCHIVO: FIN
+
+
+////////////////////////////////COMPARAR FECHA: INICIO
+procedure TFActualizador.CompararFecha;
+var
+   CDate,MDate,ADate : TDateTime;
+begin
+  // Correcto?
+  if GetFileTimes('D:\Easy System S2010\Actualizador\Easy_Actualizador.exe', CDate, MDate, ADate) then begin
+    Fecha1:= FormatDateTime('hh:mm:ss AM/PM',MDate);
+  end;
+  if GetFileTimes('D:\Easy System S2010\Easy_Actualizador.exe', CDate, MDate, ADate) then begin
+    Fecha2:= FormatDateTime('hh:mm:ss AM/PM',MDate);
+  end;
+  if Fecha1 = Fecha2 then begin
+  ShowMessage('Iguales');
+  end
+  else begin
+  ShowMessage('No Iguales');
+  end;
+
+end;
+
+////////////////////////////////COMPARAR FECHA: FIN
+
 
 end.

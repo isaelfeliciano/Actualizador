@@ -1,9 +1,9 @@
-object Form1: TForm1
+object FActualizador: TFActualizador
   Left = 319
   Top = 144
   BorderIcons = [biSystemMenu]
   BorderStyle = bsNone
-  Caption = 'Form1'
+  Caption = 'FActualizador'
   ClientHeight = 187
   ClientWidth = 597
   Color = clBtnHighlight
