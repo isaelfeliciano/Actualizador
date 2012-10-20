@@ -8,6 +8,7 @@ object FActualizador: TFActualizador
   ClientWidth = 597
   Color = clBtnHighlight
   ParentFont = True
+  FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
@@ -1231,6 +1232,21 @@ object FActualizador: TFActualizador
       'F:\Actualizaciones\*.*'
       'G:\Actualizaciones\*.*')
   end
+  object CbLetraDisco: TComboBox
+    Left = 120
+    Top = 104
+    Width = 81
+    Height = 21
+    ItemHeight = 13
+    TabOrder = 6
+    Text = 'Letra Disco'
+    Items.Strings = (
+      'C:'
+      'D:'
+      'E:'
+      'F:'
+      'G:')
+  end
   object SQLConnection1: TSQLConnection
     ConnectionName = 'IBConnection'
     DriverName = 'Interbase'
@@ -1972,23 +1988,9 @@ object FActualizador: TFActualizador
     Left = 320
     Top = 8
   end
-  object ShellChangeNotifier1: TShellChangeNotifier
-    NotifyFilters = [nfSizeChange, nfWriteChange]
-    Root = 'D:\'
-    WatchSubTree = True
-    Left = 288
-    Top = 8
-  end
-  object Timer3: TTimer
-    Enabled = False
-    Interval = 30000
-    OnTimer = Timer3Timer
-    Left = 248
-    Top = 8
-  end
   object Timer4: TTimer
     Enabled = False
-    Interval = 3000
+    Interval = 500
     OnTimer = Timer4Timer
     Left = 216
     Top = 8
@@ -1997,6 +1999,13 @@ object FActualizador: TFActualizador
     HardDriveOnly = False
     OnUpdateDir = SHChangeNotify1UpdateDir
     Left = 184
+    Top = 8
+  end
+  object Timer5: TTimer
+    Enabled = False
+    Interval = 300000
+    OnTimer = Timer5Timer
+    Left = 152
     Top = 8
   end
 end

@@ -17,6 +17,6 @@ PreviousHandle:= FindWindow('TFActualizador', 'FActualizador');
   Application.CreateForm(TFActualizador, FActualizador);
   Application.Run;
   end
-  else
+ else
   SetForeGroundWindow(PreviousHandle);
 end.

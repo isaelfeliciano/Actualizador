@@ -42,7 +42,7 @@ end;
 
 procedure TFNuevaAct.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-Form1.Timer4.Enabled:= True;
+FActualizador.Timer4.Enabled:= True;
 Action:= Cafree;
 end;
 

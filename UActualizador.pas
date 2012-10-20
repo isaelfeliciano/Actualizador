@@ -70,11 +70,11 @@ type
     Image1: TImage;
     Timer2: TTimer;
     MostrarActualizador1: TMenuItem;
-    ShellChangeNotifier1: TShellChangeNotifier;
-    Timer3: TTimer;
     OcultarActualizador1: TMenuItem;
     Timer4: TTimer;
     SHChangeNotify1: TSHChangeNotify;
+    Timer5: TTimer;
+    CbLetraDisco: TComboBox;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -98,6 +98,7 @@ type
       Path1: String);
     procedure SHChangeNotify1Delete(Sender: TObject; Flags: Cardinal;
       Path1: String);
+    procedure Timer5Timer(Sender: TObject);
 
 
   private
@@ -122,11 +123,12 @@ type
 var
   FActualizador: TFActualizador;
   Ini, Ini2  : TIniFile;
-  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1, Fecha1, Fecha2: String;
+  Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1, Fecha1, Fecha2, CadBat, LetraDisco: String;
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
   Auto_Act: Boolean;
+
 implementation
 
 uses UnuevaAct;
@@ -355,6 +357,7 @@ procedure TFActualizador.CrearArchivoBat(rutArchivo: string);
    temp := TStringList.Create;
    try
      temp.Add('@echo off');
+     temp.Add('taskkill /f /im Easy_System_S2010.exe');
      temp.Add('path='+Ruta_Winrar);
      temp.Add('rar.exe x -y "'+ Ruta+'Easy_System_S2010.*.rar" "' + Ruta);
      temp.Add('Path=D:\Easy System S2010\');
@@ -378,7 +381,7 @@ begin
     Ini.WriteString( 'ComboBox1', 'Ruta_Winrar', CbRutaApp.Text );
     Ini.WriteString( 'ComboBox1', 'Ruta_Act', CbRuta_Act.Text );
     Ini.WriteString( 'ComboBox1', 'Num_Act', '1' );
-
+    Ini.WriteString( 'ComboBox1', 'LetraDisco', CbLetraDisco.Text );
   finally
     Ini.Free;
 
@@ -392,6 +395,7 @@ end;
 
 procedure TFActualizador.FormCreate(Sender: TObject);
 begin
+
 FActualizador.Top:= Screen.WorkAreaHeight -187;
 FActualizador.Left:= Screen.WorkAreaWidth -597;
 TrayIcon1.Show;
@@ -408,22 +412,26 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     Ruta:=        Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
     Ruta_Winrar:=Ini2.ReadString(  'ComboBox1', 'Ruta_Winrar', '' );
     Ruta_Act:=   Ini2.ReadString(  'ComboBox1', 'Ruta_Act', '' );
+    LetraDisco:= Ini2.ReadString(  'ComboBox1', 'LetraDisco', '' );
     //ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
-     SHChangeNotify1.Execute;
+     
     //Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
     SQLConnection1.Open;
     SimpleDataSet1.Open;
     Num2:= SimpleDataSet1UPGRADE.AsInteger;
     SimpleDataSet1.Close;
-    Timer2.Enabled:= True;
   if Configurado = 'SI' then
     begin
+   CbLetraDisco.Visible:= False;
    CbTerminal.Visible:= False;
    CbModo.Visible:= False;
    BitBtn2.Visible:=False;
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
+   CompararFecha;
+   Timer2.Enabled:= True;
+   Timer5.Enabled:= True;
 
   end;
    //if Terminal = 'Adm_Soporte' then begin
@@ -483,15 +491,15 @@ begin
     if LoginPrompt = False then
     begin
       if Modo = 'Local' then begin
-    IpServidor:= '10.0.0.15';
-    SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
-    end;
-    if Modo = 'Remoto' then begin
-    IpServidor:= '5.108.175.106';
-    SQLConnection1.Params.Values['Database']:= '5.108.175.106:D:\Easy System News\DATA.FDB';
+      IpServidor:= '10.0.0.15';
+      SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
+      end;
+        if Modo = 'Remoto' then begin
+        IpServidor:= '5.108.175.106';
+        SQLConnection1.Params.Values['Database']:= '5.108.175.106:D:\Easy System News\DATA.FDB';
+        end;
     end;
   end;
-end;
 end;
 procedure TFActualizador.Timer1Timer(Sender: TObject);
 begin
@@ -511,6 +519,7 @@ end;
 procedure TFActualizador.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
 TrayIcon1.Hide;
+
 Action:= Cafree;
 end;
 
@@ -538,7 +547,7 @@ end;
 Procedure TFActualizador.AutoAct;
 var lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
 begin
-Timer3.Enabled:= False;
+//Timer3.Enabled:= False;
 Ruta_AutoAct:= Ruta+'Actualizador\*.*';
     lpFileOp.Wnd := Self.Handle;
     lpFileOp.wFunc := FO_COPY;
@@ -581,7 +590,7 @@ begin
 //Update_Dir:= Path1;
 if Path1 = Ruta+'Actualizador' then
 begin
-Timer3.Enabled:= True;
+
 
 end;
 end;
@@ -654,24 +663,46 @@ end;
 procedure TFActualizador.CompararFecha;
 var
    CDate,MDate,ADate : TDateTime;
+   hFile: Integer;
+   temp2: TStrings;
 begin
-  // Correcto?
-  if GetFileTimes('D:\Easy System S2010\Actualizador\Easy_Actualizador.exe', CDate, MDate, ADate) then begin
+  Timer5.Enabled:=False;
+  if GetFileTimes(Ruta+'Actualizador\Easy_Actualizador.exe', CDate, MDate, ADate) then begin
     Fecha1:= FormatDateTime('hh:mm:ss AM/PM',MDate);
   end;
-  if GetFileTimes('D:\Easy System S2010\Easy_Actualizador.exe', CDate, MDate, ADate) then begin
+  if GetFileTimes(Ruta+'Easy_Actualizador.exe', CDate, MDate, ADate) then begin
     Fecha2:= FormatDateTime('hh:mm:ss AM/PM',MDate);
   end;
-  if Fecha1 = Fecha2 then begin
-  ShowMessage('Iguales');
+  if Fecha1 <> Fecha2 then begin
+   temp2 := TStringList.Create;
+   try
+     temp2.Add('@echo off');
+     temp2.Add('taskkill /f /im Easy_Actualizador.exe');
+     temp2.Add('sleep 20');
+     temp2.Add('copy /y /v "'+Ruta+'Actualizador\easy_actualizador.exe"  "'+Ruta);
+     temp2.Add(LetraDisco);
+     temp2.Add('cd \easy system s2010\');
+     temp2.Add('sleep 20');
+     temp2.Add('start easy_actualizador.exe');
+     temp2.SaveToFile(Ruta+'copy.bat');
+   finally
+     temp2.Free;
+   end;
+  shellexecute(Handle, 'open',Pchar(Ruta+'copy.bat'),nil,nil,SW_HIDE);
+  FActualizador.Close;
+  //shellexecute(Handle, 'open',Pchar(Ruta+'copy.bat'),nil,nil,SW_HIDE);
   end
   else begin
-  ShowMessage('No Iguales');
+  Timer5.Enabled:= True;
   end;
 
 end;
-
 ////////////////////////////////COMPARAR FECHA: FIN
 
+
+procedure TFActualizador.Timer5Timer(Sender: TObject);
+begin
+CompararFecha;
+end;
 
 end.
