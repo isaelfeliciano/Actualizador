@@ -107,7 +107,7 @@ type
   Procedure Descomprimir_Rars;
   Procedure Borrar_Rars;
   procedure CrearArchivoBat(rutArchivo: string);
-
+  procedure CrearArchivoBat2(rutArchivo: string);
   procedure PonerProgramaInicio;
   Procedure AutoAct;
   procedure CerrarEs;
@@ -116,6 +116,7 @@ type
   Procedure Copiando_Rars;
   Procedure CerrandoEs;
   Procedure CompararFecha;
+  Procedure CompararFecha2;
   Function  GetFileTimes(FileName : string; var Created : TDateTime;
        var  Modified : TDateTime; var Accessed : TDateTime) : boolean;
   end;
@@ -185,11 +186,16 @@ IdIcmpClient1.Ping;
 if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
     begin
       Label1.Caption:= 'No Conectado';
-
+      
     end else begin
       Label1.Caption:= 'Conectado '+ IpServidor;
-       Rev_Nueva_Act;
-    end;
+      SQLConnection1.Open;
+      SimpleDataSet1.Open;
+      Num2:= SimpleDataSet1UPGRADE.AsInteger;
+      SimpleDataSet1.Close;
+      Rev_Nueva_Act;
+      
+      end;
 
 end;
 ///////////////////////////////PROBANDO CONEXION: FIN
@@ -357,6 +363,7 @@ procedure TFActualizador.CrearArchivoBat(rutArchivo: string);
    temp := TStringList.Create;
    try
      temp.Add('@echo off');
+     temp.Add('taskkill /f /im Easy_System_S2010.exe');
      temp.Add('path='+Ruta_Winrar);
      temp.Add('rar.exe x -y "'+ Ruta+'Easy_System_S2010.*.rar" "' + Ruta);
      temp.Add('Path=D:\Easy System S2010\');
@@ -367,6 +374,26 @@ procedure TFActualizador.CrearArchivoBat(rutArchivo: string);
    end;
  end;
 //////////////////////////////AUTOCREANDO BAT: FIN
+
+
+
+//////////////////////////////AUTOCREANDO BAT_2: INICIO
+procedure TFActualizador.CrearArchivoBat2(rutArchivo: string);
+ var
+   temp: TStrings;
+ begin
+   temp := TStringList.Create;
+   try
+     temp.Add('@echo off');
+     temp.Add('path='+Ruta_Winrar);
+     temp.Add('rar.exe x -y "'+ LetraDisco+'\Actualizaciones\Reportes Net.rar" "' + Ruta);
+     temp.SaveToFile(rutArchivo);
+   finally
+     temp.Free;
+   end;
+ end;
+//////////////////////////////AUTOCREANDO BAT_2: FIN
+
 
 procedure TFActualizador.BitBtn2Click(Sender: TObject);
 begin
@@ -415,10 +442,10 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     //ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
      
     //Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
-    SQLConnection1.Open;
+    {SQLConnection1.Open;
     SimpleDataSet1.Open;
     Num2:= SimpleDataSet1UPGRADE.AsInteger;
-    SimpleDataSet1.Close;
+    SimpleDataSet1.Close;}
   if Configurado = 'SI' then
     begin
    CbLetraDisco.Visible:= False;
@@ -699,9 +726,47 @@ end;
 ////////////////////////////////COMPARAR FECHA: FIN
 
 
+
+////////////////////////////////COMPARAR FECHA_2: INICIO
+procedure TFActualizador.CompararFecha2;
+var
+   CDate,MDate,ADate : TDateTime;
+   hFile: Integer;
+   temp3: TStrings;
+begin
+  Timer5.Enabled:=False;
+  if GetFileTimes(LetraDisco+'Actualizaciones\Reportes Net.rar', CDate, MDate, ADate) then begin
+    Fecha1:= FormatDateTime('hh:mm:ss AM/PM',MDate);
+  end;
+  if GetFileTimes(Ruta+'Reportes Net.rar', CDate, MDate, ADate) then begin
+    Fecha2:= FormatDateTime('hh:mm:ss AM/PM',MDate);
+  end;
+  if Fecha1 <> Fecha2 then begin
+   temp3 := TStringList.Create;
+   try
+     temp3.Add('@echo off');
+     temp3.Add('copy /y /v "'+LetraDisco+'\Actualizaciones\Reportes Net.rar"  "'+Ruta);
+     temp3.SaveToFile(Ruta+'CopyReportes.bat');
+   finally
+     temp3.Free;
+   end;
+  shellexecute(Handle, 'open',Pchar(Ruta+'CopyReportes.bat'),nil,nil,SW_HIDE);
+  
+  //shellexecute(Handle, 'open',Pchar(Ruta+'copy.bat'),nil,nil,SW_HIDE);
+  end
+  else begin
+  Timer5.Enabled:= True;
+  end;
+
+end;
+////////////////////////////////COMPARAR FECHA_2: FIN
+
+
+
 procedure TFActualizador.Timer5Timer(Sender: TObject);
 begin
 CompararFecha;
+CompararFecha2
 end;
 
 end.
