@@ -230,15 +230,15 @@ end;
 
 ///////////////////////////////CERRAR ES: INICIO
 Procedure TFActualizador.CerrarEs;
-var PreviousHandle :THandle;
+var PreviousHandle2 :THandle;
 begin
-PreviousHandle:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
-  if PreviousHandle = 0 then
+PreviousHandle2:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
+  if PreviousHandle2 = 0 then
   begin
   Application.CreateForm(TFNuevaAct, FNuevaAct);
   end
   else
-  SetForeGroundWindow(PreviousHandle);
+  SetForeGroundWindow(PreviousHandle2);
 end;
 ///////////////////////////////CERRAR ES: FIN
 

@@ -1992,20 +1992,29 @@ object FActualizador: TFActualizador
     Enabled = False
     Interval = 500
     OnTimer = Timer4Timer
-    Left = 216
+    Left = 272
     Top = 8
   end
   object SHChangeNotify1: TSHChangeNotify
     HardDriveOnly = False
     OnUpdateDir = SHChangeNotify1UpdateDir
-    Left = 184
+    Left = 240
     Top = 8
   end
   object Timer5: TTimer
     Enabled = False
     Interval = 300000
     OnTimer = Timer5Timer
-    Left = 152
+    Left = 208
+    Top = 8
+  end
+  object IdFTP1: TIdFTP
+    MaxLineAction = maException
+    ReadTimeout = 0
+    OnWork = IdFTP1Work
+    ProxySettings.ProxyType = fpcmNone
+    ProxySettings.Port = 0
+    Left = 176
     Top = 8
   end
 end
