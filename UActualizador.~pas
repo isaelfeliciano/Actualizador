@@ -230,8 +230,15 @@ end;
 
 ///////////////////////////////CERRAR ES: INICIO
 Procedure TFActualizador.CerrarEs;
+var PreviousHandle :THandle;
 begin
-Application.CreateForm(TFNuevaAct, FNuevaAct);
+PreviousHandle:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
+  if PreviousHandle = 0 then
+  begin
+  Application.CreateForm(TFNuevaAct, FNuevaAct);
+  end
+  else
+  SetForeGroundWindow(PreviousHandle);
 end;
 ///////////////////////////////CERRAR ES: FIN
 
@@ -351,7 +358,7 @@ if ExisteArchivo(File_Existe) = False then
 procedure TFActualizador.BitBtn1Click(Sender: TObject);
 
 begin
-Descomprimir_Rars;
+CerrarEs;
 end;
 
 
@@ -456,6 +463,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
    CompararFecha;
+   CompararFecha2;
    Timer2.Enabled:= True;
    Timer5.Enabled:= True;
 
@@ -735,7 +743,7 @@ var
    temp3: TStrings;
 begin
   Timer5.Enabled:=False;
-  if GetFileTimes(LetraDisco+'Actualizaciones\Reportes Net.rar', CDate, MDate, ADate) then begin
+  if GetFileTimes(LetraDisco+'\Actualizaciones\Reportes Net.rar', CDate, MDate, ADate) then begin
     Fecha1:= FormatDateTime('hh:mm:ss AM/PM',MDate);
   end;
   if GetFileTimes(Ruta+'Reportes Net.rar', CDate, MDate, ADate) then begin
@@ -746,6 +754,8 @@ begin
    try
      temp3.Add('@echo off');
      temp3.Add('copy /y /v "'+LetraDisco+'\Actualizaciones\Reportes Net.rar"  "'+Ruta);
+     temp3.Add('path='+Ruta_Winrar);
+     temp3.Add('rar.exe x -y "'+ LetraDisco+'\Actualizaciones\Reportes Net.rar" "' + Ruta);
      temp3.SaveToFile(Ruta+'CopyReportes.bat');
    finally
      temp3.Free;

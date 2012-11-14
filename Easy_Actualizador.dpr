@@ -13,7 +13,7 @@ PreviousHandle:= FindWindow('TFActualizador', 'FActualizador');
   if PreviousHandle = 0 then
   begin
   Application.Initialize;
-  Application.Title := 'ES Actualizador v1.0';
+  Application.Title := 'ES Actualizador v1.1';
   Application.CreateForm(TFActualizador, FActualizador);
   Application.Run;
   end

@@ -230,8 +230,15 @@ end;
 
 ///////////////////////////////CERRAR ES: INICIO
 Procedure TFActualizador.CerrarEs;
+var PreviousHandle2 :THandle;
 begin
-Application.CreateForm(TFNuevaAct, FNuevaAct);
+PreviousHandle2:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
+  if PreviousHandle2 = 0 then
+  begin
+  Application.CreateForm(TFNuevaAct, FNuevaAct);
+  end
+  else
+  SetForeGroundWindow(PreviousHandle2);
 end;
 ///////////////////////////////CERRAR ES: FIN
 
@@ -351,7 +358,7 @@ if ExisteArchivo(File_Existe) = False then
 procedure TFActualizador.BitBtn1Click(Sender: TObject);
 
 begin
-Descomprimir_Rars;
+CerrarEs;
 end;
 
 
