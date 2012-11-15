@@ -223,7 +223,9 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   Timer2.Enabled:= False;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
-  CerrarEs;
+  Label2.Caption:= 'Descargando archivos';
+  Sleep(1000);
+  DescargarArchivo;
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
 //shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
 
@@ -269,7 +271,9 @@ Kill_Task:= FActualizador.Ruta+'Kill_Task.bat';
    end;
 
 shellexecute(Handle, 'open',Pchar(Kill_Task),nil,nil,SW_HIDE);
-DescargarArchivo;
+  FActualizador.Top:= Screen.WorkAreaHeight -187;
+  FActualizador.Left:= Screen.WorkAreaWidth -597;
+  Descomprimir_Rars;
 //Copiando_Rars;
 
 end;
@@ -281,8 +285,6 @@ var
 //FTP: TIdFTP;
 Barra: Integer;
 begin
-  FActualizador.Top:= Screen.WorkAreaHeight -187;
-FActualizador.Left:= Screen.WorkAreaWidth -597;
   FTP := TIdFTP.Create( nil );
   FTP.OnWork := IdFTP1Work;
   //FTP.EndWork(wmRead):= IdFTP1WorkEnd
@@ -323,7 +325,7 @@ FActualizador.Left:= Screen.WorkAreaWidth -597;
  FTP.Disconnect;
  FTP.Free;
  if Gauge1.Progress =  Gauge1.MaxValue then begin
- Descomprimir_Rars;
+ CerrarEs;
  end;
 end;
 ///////////////////////////////DESCARGANDO_ARCHIVO: FIN

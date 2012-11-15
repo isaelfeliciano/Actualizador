@@ -10,13 +10,13 @@ uses
 var PreviousHandle :THandle;
 begin
 PreviousHandle:= FindWindow('TFActualizador', 'FActualizador');
-  //if PreviousHandle = 0 then
-  //begin
+  if PreviousHandle = 0 then
+  begin
   Application.Initialize;
   Application.Title := 'ES Actualizador v1.1';
   Application.CreateForm(TFActualizador, FActualizador);
   Application.Run;
-  //end
- //else
-  //SetForeGroundWindow(PreviousHandle);
+  end
+ else
+  SetForeGroundWindow(PreviousHandle);
 end.

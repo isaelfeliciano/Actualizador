@@ -7,7 +7,8 @@ uses
   Dialogs, DBXpress, IdBaseComponent, IdComponent, IdRawBase, IdRawClient,
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
   Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls,
-  TrayIcon, jpeg, ShellCtrls, SHChangeNotify;
+  TrayIcon, jpeg, ShellCtrls, SHChangeNotify, IdTCPConnection, IdTCPClient,
+  IdFTP;
 
 type
   TFActualizador = class(TForm)
@@ -75,6 +76,7 @@ type
     SHChangeNotify1: TSHChangeNotify;
     Timer5: TTimer;
     CbLetraDisco: TComboBox;
+    IdFTP1: TIdFTP;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -99,6 +101,8 @@ type
     procedure SHChangeNotify1Delete(Sender: TObject; Flags: Cardinal;
       Path1: String);
     procedure Timer5Timer(Sender: TObject);
+    procedure IdFTP1Work(Sender: TObject; AWorkMode: TWorkMode;
+      const AWorkCount: Integer);
 
 
   private
@@ -113,6 +117,7 @@ type
   procedure CerrarEs;
   public
   Ruta: String;
+  Procedure DescargarArchivo;
   Procedure Copiando_Rars;
   Procedure CerrandoEs;
   Procedure CompararFecha;
@@ -129,7 +134,10 @@ var
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
   Auto_Act: Boolean;
-
+  //
+  Afiles: TStringList;
+  i,r,BarraProgreso: Integer;
+  FTP: TIdFTP;
 implementation
 
 uses UnuevaAct;
@@ -215,7 +223,9 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   Timer2.Enabled:= False;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
-  CerrarEs;
+  Label2.Caption:= 'Descargando archivos';
+  Sleep(500);
+  DescargarArchivo;
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
 //shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
 
@@ -261,10 +271,65 @@ Kill_Task:= FActualizador.Ruta+'Kill_Task.bat';
    end;
 
 shellexecute(Handle, 'open',Pchar(Kill_Task),nil,nil,SW_HIDE);
-Copiando_Rars;
+  FActualizador.Top:= Screen.WorkAreaHeight -187;
+  FActualizador.Left:= Screen.WorkAreaWidth -597;
+  Descomprimir_Rars;
+//Copiando_Rars;
 
 end;
 ///////////////////////////////CERRANDO ES: FIN
+
+///////////////////////////////DESCARGANDO_ARCHIVO: INICIO
+Procedure TFActualizador.DescargarArchivo;
+var
+//FTP: TIdFTP;
+Barra: Integer;
+begin
+  FTP := TIdFTP.Create( nil );
+  FTP.OnWork := IdFTP1Work;
+  //FTP.EndWork(wmRead):= IdFTP1WorkEnd
+  FTP.Username := 'isaelfeliciano_zxq';
+  FTP.Password := 'Ri846161636';
+  FTP.Host := 'isaelfeliciano.zxq.net';
+  Barra:= 0;
+  try
+    FTP.Connect;
+
+   except
+    raise Exception.Create( 'No se ha podido conectar con el servidor1 ' + FTP.Host );
+  end;
+
+  FTP.ChangeDir( '/Actualizaciones/' );
+  Afiles:= TStringList.Create;
+  FTP.List(AFiles, '*.rar', False);
+    for r := 0 to Afiles.Count -1 do begin
+      Barra:= Barra + FTP.Size( ExtractFileName( AFiles[r] ) );
+    end;
+  Gauge1.MinValue:= 0;
+  Gauge1.MaxValue:= Barra;
+  for i := 0 to Afiles.Count -1 do begin
+          //ListBox1.Items.add(AFiles[i]);
+
+
+   //Label1.Caption:= Afiles[i];
+   try
+    FTP.BeginWork(wmRead);
+    FTP.Get( ExtractFileName(AFiles[i]), 'D:\Easy System S2010\'+AFiles[i], True, True );
+    Sleep(500);
+    Except
+    raise Exception.Create( 'No se ha podido conectar con el servidor2 ' + FTP.Host );
+   end;
+ end;
+
+ FTP.EndWork(wmRead);
+ FTP.Disconnect;
+ FTP.Free;
+ if Gauge1.Progress =  Gauge1.MaxValue then begin
+ CerrarEs;
+ end;
+end;
+///////////////////////////////DESCARGANDO_ARCHIVO: FIN
+
 
 ///////////////////////////////COPIANDO RAR'S: INICIO
 Procedure TFActualizador.Copiando_Rars;
@@ -305,7 +370,7 @@ Unrar:=Ruta+'Unrar.bat';
 CrearArchivoBat(Ruta+'Unrar.bat');
 shellexecute(Handle, 'open',Pchar(Unrar),nil,nil,SW_HIDE);
 For i:= 25 to 75 do
-Gauge1.Progress:= i;
+//Gauge1.Progress:= i;
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: FIN
 
 Label2.Caption:= 'Modificando Base de Datos...';
@@ -314,7 +379,7 @@ SQLConnection1.Execute(sql, nil, nil);
 Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
 For i:= 75 to 100 do
-Gauge1.Progress:= i;
+//Gauge1.Progress:= i;
 Label2.Caption:= 'Actualizacion Terminada';
 Ruta_Es_Exe:= Ruta+'Easy_System_S2010.exe';
 //shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
@@ -322,6 +387,7 @@ Label2.Caption:='';
 Timer2.Enabled:= True;
 Label2.Caption:= 'ACTUALIZADO';
 Gauge1.Progress:= 0;
+Sleep(1000);
 ShowMessage('Actualizacion Completa. Puede abrir el SISTEMA');
 end;
 
@@ -777,6 +843,13 @@ procedure TFActualizador.Timer5Timer(Sender: TObject);
 begin
 CompararFecha;
 CompararFecha2
+end;
+
+procedure TFActualizador.IdFTP1Work(Sender: TObject; AWorkMode: TWorkMode;
+  const AWorkCount: Integer);
+begin
+ BarraProgreso:= BarraProgreso + AWorkCount div 3;
+ Gauge1.Progress := BarraProgreso;
 end;
 
 end.
