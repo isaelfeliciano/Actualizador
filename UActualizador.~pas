@@ -186,7 +186,7 @@ if Modo = 'Local' then
     IpServidor:= '10.0.0.15';
 
     if Modo = 'Remoto' then
-    IpServidor:= '5.108.175.106';
+    IpServidor:= '25.108.175.106';
 
 IdIcmpClient1.Host:= IpServidor;
 IdIcmpClient1.Ping;
@@ -220,12 +220,14 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     SimpleDataSet1.Close;
   if Num1 < Num2 then
   begin
-  Timer2.Enabled:= False;
-  FActualizador.Top:= Screen.WorkAreaHeight -187;
-  FActualizador.Left:= Screen.WorkAreaWidth -597;
-  Label2.Caption:= 'Descargando archivos';
-  Sleep(500);
-  DescargarArchivo;
+   Timer2.Enabled:= False;
+   FActualizador.Top:= Screen.WorkAreaHeight -187;
+   FActualizador.Left:= Screen.WorkAreaWidth -597;
+   Label2.Caption:= 'Descargando archivos'; 
+   Sleep(1000);
+   DescargarArchivo;  
+  end;
+  
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
 //shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
 
@@ -235,6 +237,9 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   else begin
   Label2.Caption:= 'No hay Actualizaciones';
   Timer2.Enabled:=True;}
+  end
+  else begin
+    Label2.Caption:= 'ACTUALIZADO v.' + IntToStr(Num2);  
   end;
 end;
 
@@ -296,7 +301,7 @@ begin
     FTP.Connect;
 
    except
-    raise Exception.Create( 'No se ha podido conectar con el servidor1 ' + FTP.Host );
+    raise Exception.Create( 'No se ha podido conectar con el servidor. ');
   end;
 
   FTP.ChangeDir( '/Actualizaciones/' );
@@ -314,10 +319,10 @@ begin
    //Label1.Caption:= Afiles[i];
    try
     FTP.BeginWork(wmRead);
-    FTP.Get( ExtractFileName(AFiles[i]), 'D:\Easy System S2010\'+AFiles[i], True, True );
+    FTP.Get( ExtractFileName(AFiles[i]), LetraDisco+'\Easy System S2010\'+AFiles[i], True, True );
     Sleep(500);
     Except
-    raise Exception.Create( 'No se ha podido conectar con el servidor2 ' + FTP.Host );
+    raise Exception.Create( 'No se ha podido iniciar la descarga. ');
    end;
  end;
 
@@ -326,6 +331,7 @@ begin
  FTP.Free;
  if Gauge1.Progress =  Gauge1.MaxValue then begin
  CerrarEs;
+ Gauge1.Visible:= False;
  end;
 end;
 ///////////////////////////////DESCARGANDO_ARCHIVO: FIN
@@ -374,6 +380,7 @@ For i:= 25 to 75 do
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: FIN
 
 Label2.Caption:= 'Modificando Base de Datos...';
+sleep(1000);
 sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +IntToStr(Num2);
 SQLConnection1.Execute(sql, nil, nil);
 Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
@@ -381,6 +388,7 @@ Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
 For i:= 75 to 100 do
 //Gauge1.Progress:= i;
 Label2.Caption:= 'Actualizacion Terminada';
+sleep(1000);
 Ruta_Es_Exe:= Ruta+'Easy_System_S2010.exe';
 //shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
 Label2.Caption:='';
@@ -595,8 +603,8 @@ begin
       SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
       end;
         if Modo = 'Remoto' then begin
-        IpServidor:= '5.108.175.106';
-        SQLConnection1.Params.Values['Database']:= '5.108.175.106:D:\Easy System News\DATA.FDB';
+        IpServidor:= '25.108.175.106';
+        SQLConnection1.Params.Values['Database']:= '25.108.175.106:D:\Easy System News\DATA.FDB';
         end;
     end;
   end;
@@ -608,7 +616,10 @@ end;
 
 procedure TFActualizador.ActualizarAhora1Click(Sender: TObject);
 begin
-Copiando_Rars;
+Label2.Caption:= 'Descargando archivos.';  
+FActualizador.Top:= Screen.WorkAreaHeight -187;
+FActualizador.Left:= Screen.WorkAreaWidth -597;  
+DescargarArchivo;
 end;
 
 procedure TFActualizador.CerrarActualizador1Click(Sender: TObject);

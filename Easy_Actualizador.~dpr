@@ -7,16 +7,25 @@ uses
 
 {$R *.res}
 
-var PreviousHandle :THandle;
+var 
+Mutex :THandle;
+PreviousHandle :THandle;
 begin
-PreviousHandle:= FindWindow('TFActualizador', 'FActualizador');
-  if PreviousHandle = 0 then
+ PreviousHandle:= FindWindow('TFActualizador', 'FActualizador');
+ Mutex:= CreateMutex(nil, True, 'Actualizador_ES');
+  if (Mutex = 0) OR (GetLastError = ERROR_ALREADY_EXISTS) then
   begin
-  Application.Initialize;
-  Application.Title := 'ES Actualizador v1.1';
-  Application.CreateForm(TFActualizador, FActualizador);
-  Application.Run;
+   SetForeGroundWindow(PreviousHandle);
+   FActualizador.Top:= Screen.WorkAreaHeight -187;
+   FActualizador.Left:= Screen.WorkAreaWidth -597;
   end
  else
-  SetForeGroundWindow(PreviousHandle);
+  begin
+   Application.Initialize;
+   Application.Title := 'ES Actualizador v1.1';
+   Application.CreateForm(TFActualizador, FActualizador);
+   Application.Run;
+    if Mutex <> 0 then
+    closeHandle(Mutex);
+  end;
 end.
