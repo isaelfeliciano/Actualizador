@@ -226,7 +226,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    Label2.Caption:= 'Descargando archivos'; 
    Sleep(1000);
    DescargarArchivo;  
-  end;
+  
   
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
 //shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);

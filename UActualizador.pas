@@ -140,7 +140,7 @@ var
   FTP: TIdFTP;
 implementation
 
-uses UnuevaAct;
+uses UnuevaAct, Ulistar;
 
 {$R *.dfm}
 
@@ -288,8 +288,21 @@ end;
 Procedure TFActualizador.DescargarArchivo;
 var
 //FTP: TIdFTP;
-Barra: Integer;
+Barra, o: Integer;
+Directorio: TStringList;
 begin
+  If FileExists(Ruta + 'Easy*.rar') then
+    begin
+      Directorio := TStringList.Create;
+      UListar.Form1.Listar(Ruta, Directorio );
+      //ShowMessage( Directorio.Text );
+      //Directorio.Free;
+      for o:= 0 to Directorio.Count -1 do
+      begin
+        DeleteFile(Ruta+Directorio[o]);
+      end;
+   end;
+
   FTP := TIdFTP.Create( nil );
   FTP.OnWork := IdFTP1Work;
   //FTP.EndWork(wmRead):= IdFTP1WorkEnd
