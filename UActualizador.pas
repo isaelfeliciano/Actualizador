@@ -224,6 +224,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    FActualizador.Top:= Screen.WorkAreaHeight -187;
    FActualizador.Left:= Screen.WorkAreaWidth -597;
    Label2.Caption:= 'Descargando archivos'; 
+   Update;
    Sleep(1000);
    DescargarArchivo;  
   
@@ -291,10 +292,11 @@ var
 Barra, o: Integer;
 Directorio: TStringList;
 begin
+  Update;
   If FileExists(Ruta + 'Easy*.rar') then
     begin
       Directorio := TStringList.Create;
-      UListar.Form1.Listar(Ruta, Directorio );
+      UListar.FListar.Listar(Ruta, Directorio );
       //ShowMessage( Directorio.Text );
       //Directorio.Free;
       for o:= 0 to Directorio.Count -1 do
@@ -382,6 +384,7 @@ Procedure TFActualizador.Descomprimir_Rars;
 var i:integer; Unrar,Ruta_Es_Exe, sql:String;
 begin
 Label2.Caption:= 'Descomprimiendo Rars...';
+Update;
 Unrar:=Ruta+'Unrar.bat';
 //Unrar:='x -y "'+Ruta+'Easy_System_S2010.part01.rar" '+'"'+Ruta+'"';
 //ShellExecute(Form1.Handle,nil,PChar(Ruta_Winrar),Pchar(Unrar),'',SW_NORMAL);
@@ -393,6 +396,7 @@ For i:= 25 to 75 do
 ///////////////////////////////DESCOMPRIMIENDO Y BORRANDO RAR'S: FIN
 
 Label2.Caption:= 'Modificando Base de Datos...';
+Update;
 sleep(1000);
 sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +IntToStr(Num2);
 SQLConnection1.Execute(sql, nil, nil);
@@ -401,6 +405,7 @@ Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
 For i:= 75 to 100 do
 //Gauge1.Progress:= i;
 Label2.Caption:= 'Actualizacion Terminada';
+Update;
 sleep(1000);
 Ruta_Es_Exe:= Ruta+'Easy_System_S2010.exe';
 //shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
@@ -611,14 +616,16 @@ begin
   begin
     if LoginPrompt = False then
     begin
-      if Modo = 'Local' then begin
-      IpServidor:= '10.0.0.15';
-      SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
+      if Modo = 'Local' then 
+      begin
+        IpServidor:= '10.0.0.15';
+        SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
       end;
-        if Modo = 'Remoto' then begin
+      if Modo = 'Remoto' then 
+      begin
         IpServidor:= '25.108.175.106';
         SQLConnection1.Params.Values['Database']:= '25.108.175.106:D:\Easy System News\DATA.FDB';
-        end;
+      end;
     end;
   end;
 end;
@@ -629,9 +636,10 @@ end;
 
 procedure TFActualizador.ActualizarAhora1Click(Sender: TObject);
 begin
-Label2.Caption:= 'Descargando archivos.';  
+Label2.Caption:= 'Descargando archivos.';
+Update;
 FActualizador.Top:= Screen.WorkAreaHeight -187;
-FActualizador.Left:= Screen.WorkAreaWidth -597;  
+FActualizador.Left:= Screen.WorkAreaWidth -597;
 DescargarArchivo;
 end;
 

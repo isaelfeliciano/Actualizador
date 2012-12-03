@@ -1106,7 +1106,7 @@ object FNuevaAct: TFNuevaAct
     Top = 8
     Width = 376
     Height = 16
-    Caption = 'Se ha encontrado una nueva actualizaci'#243'n. '#191'Que desea hacer?'
+    Caption = 'Se ha encontrado una nueva actualizaci'#243'n. '#191'Elija que  hacer?'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
