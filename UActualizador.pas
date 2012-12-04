@@ -8,7 +8,7 @@ uses
   IdIcmpClient, StdCtrls, DB, DBClient, SimpleDS, SqlExpr, Gauges, Buttons,
   Menus, IniFiles, Grids, DBGrids, ComCtrls, ShellApi, Registry, ExtCtrls,
   TrayIcon, jpeg, ShellCtrls, SHChangeNotify, IdTCPConnection, IdTCPClient,
-  IdFTP;
+  IdFTP, TlHelp32;
 
 type
   TFActualizador = class(TForm)
@@ -77,6 +77,7 @@ type
     Timer5: TTimer;
     CbLetraDisco: TComboBox;
     IdFTP1: TIdFTP;
+    Timer3: TTimer;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -122,8 +123,10 @@ type
   Procedure CerrandoEs;
   Procedure CompararFecha;
   Procedure CompararFecha2;
+  Function  processExists(exeFileName: string): Boolean;
   Function  GetFileTimes(FileName : string; var Created : TDateTime;
        var  Modified : TDateTime; var Accessed : TDateTime) : boolean;
+
   end;
 
 var
@@ -133,7 +136,7 @@ var
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
-  Auto_Act: Boolean;
+  Auto_Act, PararEjecucion: Boolean;
   //
   Afiles: TStringList;
   i,r,BarraProgreso: Integer;
@@ -166,6 +169,7 @@ begin
   Registro.RootKey := HKEY_LOCAL_MACHINE;
 
   if Registro.OpenKey( 'Software\Microsoft\Windows\CurrentVersion\Run', FALSE ) then
+  if Registro.ValueExists('Easy_Actualizador.exe') = False then
   begin
     try
     Registro.WriteString( ExtractFileName( Application.ExeName ), Application.ExeName );
@@ -182,6 +186,9 @@ begin
 /////////////////////////////PROBANDO CONEXION: INICIO
 Procedure TFActualizador.Probar_Conexion;
 begin
+Label2.Caption:= 'Probando Conección';
+Update;
+Timer2.Enabled:= False;
 if Modo = 'Local' then
     IpServidor:= '10.0.0.15';
 
@@ -194,7 +201,7 @@ IdIcmpClient1.Ping;
 if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
     begin
       Label1.Caption:= 'No Conectado';
-      
+      Timer2.Enabled:= True;
     end else begin
       Label1.Caption:= 'Conectado '+ IpServidor;
       SQLConnection1.Open;
@@ -248,14 +255,19 @@ end;
 Procedure TFActualizador.CerrarEs;
 var PreviousHandle2 :THandle;
 begin
-PreviousHandle2:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
-  if PreviousHandle2 = 0 then
+ if processExists('Easy_System_S2010.exe') then
   begin
-  Application.CreateForm(TFNuevaAct, FNuevaAct);
+    PreviousHandle2:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
+    if PreviousHandle2 = 0 then
+    begin
+      Application.CreateForm(TFNuevaAct, FNuevaAct);
+    end
+    else
+    SetForeGroundWindow(PreviousHandle2);
   end
   else
-  SetForeGroundWindow(PreviousHandle2);
-end;
+  Descomprimir_Rars;
+  end;
 ///////////////////////////////CERRAR ES: FIN
 
 
@@ -293,6 +305,9 @@ Barra, o: Integer;
 Directorio: TStringList;
 begin
   Update;
+  FActualizador.Top:= Screen.WorkAreaHeight -187;
+  FActualizador.Left:= Screen.WorkAreaWidth -597;
+  Timer3.Enabled:= False;
   If FileExists(Ruta + 'Easy*.rar') then
     begin
       Directorio := TStringList.Create;
@@ -333,20 +348,31 @@ begin
 
    //Label1.Caption:= Afiles[i];
    try
+    PararEjecucion:= False;
     FTP.BeginWork(wmRead);
     FTP.Get( ExtractFileName(AFiles[i]), LetraDisco+'\Easy System S2010\'+AFiles[i], True, True );
     Sleep(500);
     Except
-    raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+     begin
+      //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      PararEjecucion:= True;
+      Timer3.Enabled:= True;
+     end;
    end;
  end;
-
+ If PararEjecucion = True then begin
+ Exit;
+ End
+ Else
+ Begin
  FTP.EndWork(wmRead);
  FTP.Disconnect;
  FTP.Free;
  if Gauge1.Progress =  Gauge1.MaxValue then begin
  CerrarEs;
  Gauge1.Visible:= False;
+
+ end;
  end;
 end;
 ///////////////////////////////DESCARGANDO_ARCHIVO: FIN
@@ -410,11 +436,12 @@ sleep(1000);
 Ruta_Es_Exe:= Ruta+'Easy_System_S2010.exe';
 //shellexecute(Handle, 'open',PChar(Ruta_Es_Exe),nil,nil,SW_NORMAL);
 Label2.Caption:='';
-Timer2.Enabled:= True;
 Label2.Caption:= 'ACTUALIZADO';
+Update;
 Gauge1.Progress:= 0;
 Sleep(1000);
-ShowMessage('Actualizacion Completa. Puede abrir el SISTEMA');
+Timer2.Enabled:= True;
+//ShowMessage('Actualizacion Completa. Puede abrir el SISTEMA');
 end;
 
 
@@ -558,7 +585,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CompararFecha2;
    Timer2.Enabled:= True;
    Timer5.Enabled:= True;
-
+   PonerProgramaInicio;
   end;
    //if Terminal = 'Adm_Soporte' then begin
 
@@ -697,7 +724,9 @@ end;
 
 procedure TFActualizador.Timer3Timer(Sender: TObject);
 begin
-AutoAct;
+FActualizador.Top:= Screen.WorkAreaHeight -187;
+FActualizador.Left:= Screen.WorkAreaWidth -597;
+DescargarArchivo;
 end;
 
 procedure TFActualizador.FormShow(Sender: TObject);
@@ -882,6 +911,30 @@ procedure TFActualizador.IdFTP1Work(Sender: TObject; AWorkMode: TWorkMode;
 begin
  BarraProgreso:= BarraProgreso + AWorkCount div 3;
  Gauge1.Progress := BarraProgreso;
+end;
+
+
+function TFActualizador.processExists(exeFileName: string): Boolean;
+var
+  ContinueLoop: BOOL;
+  FSnapshotHandle: THandle;
+  FProcessEntry32: TProcessEntry32;
+begin
+  FSnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  FProcessEntry32.dwSize := SizeOf(FProcessEntry32);
+  ContinueLoop := Process32First(FSnapshotHandle, FProcessEntry32);
+  Result := False;
+  while Integer(ContinueLoop) <> 0 do
+  begin
+    if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) =
+      UpperCase(ExeFileName)) or (UpperCase(FProcessEntry32.szExeFile) =
+      UpperCase(ExeFileName))) then
+    begin
+      Result := True;
+    end;
+    ContinueLoop := Process32Next(FSnapshotHandle, FProcessEntry32);
+  end;
+  CloseHandle(FSnapshotHandle);
 end;
 
 end.

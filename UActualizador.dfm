@@ -1983,7 +1983,7 @@ object FActualizador: TFActualizador
   end
   object Timer2: TTimer
     Enabled = False
-    Interval = 3000
+    Interval = 4000
     OnTimer = Timer2Timer
     Left = 320
     Top = 8
@@ -2015,6 +2015,13 @@ object FActualizador: TFActualizador
     ProxySettings.ProxyType = fpcmNone
     ProxySettings.Port = 0
     Left = 176
+    Top = 8
+  end
+  object Timer3: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = Timer3Timer
+    Left = 144
     Top = 8
   end
 end

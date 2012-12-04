@@ -1983,7 +1983,7 @@ object FActualizador: TFActualizador
   end
   object Timer2: TTimer
     Enabled = False
-    Interval = 3000
+    Interval = 4000
     OnTimer = Timer2Timer
     Left = 320
     Top = 8
