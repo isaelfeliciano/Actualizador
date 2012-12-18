@@ -1,6 +1,6 @@
 object FActualizador: TFActualizador
-  Left = 319
-  Top = 144
+  Left = 410
+  Top = 168
   BorderIcons = [biSystemMenu]
   BorderStyle = bsNone
   Caption = 'FActualizador'
@@ -1474,6 +1474,31 @@ object FActualizador: TFActualizador
         Name = 'VILLA_MELLA'
         Attributes = [faRequired]
         DataType = ftSmallint
+      end
+      item
+        Name = 'USUARIO'
+        DataType = ftString
+        Size = 30
+      end
+      item
+        Name = 'CLAVE'
+        DataType = ftString
+        Size = 20
+      end
+      item
+        Name = 'SERVIDOR'
+        DataType = ftString
+        Size = 40
+      end
+      item
+        Name = 'SERVIDOR_ALT'
+        DataType = ftString
+        Size = 50
+      end
+      item
+        Name = 'RUTA_ACTUALIZACIONES'
+        DataType = ftString
+        Size = 50
       end>
     IndexDefs = <
       item
@@ -1638,6 +1663,24 @@ object FActualizador: TFActualizador
     object SimpleDataSet1VILLA_MELLA: TSmallintField
       FieldName = 'VILLA_MELLA'
       Required = True
+    end
+    object SimpleDataSet1USUARIO: TStringField
+      FieldName = 'USUARIO'
+      Size = 30
+    end
+    object SimpleDataSet1CLAVE: TStringField
+      FieldName = 'CLAVE'
+    end
+    object SimpleDataSet1SERVIDOR: TStringField
+      FieldName = 'SERVIDOR'
+    end
+    object SimpleDataSet1SERVIDOR_ALT: TStringField
+      FieldName = 'SERVIDOR_ALT'
+      Size = 50
+    end
+    object SimpleDataSet1RUTA_ACTUALIZACIONES: TStringField
+      FieldName = 'RUTA_ACTUALIZACIONES'
+      Size = 50
     end
   end
   object IdIcmpClient1: TIdIcmpClient
@@ -2023,5 +2066,152 @@ object FActualizador: TFActualizador
     OnTimer = Timer3Timer
     Left = 144
     Top = 8
+  end
+  object SDS_Actualizador: TSimpleDataSet
+    Aggregates = <>
+    Connection = SQLConnection1
+    DataSet.CommandText = 'select * from AUTO_ACT'
+    DataSet.MaxBlobSize = -1
+    DataSet.Params = <>
+    Params = <>
+    Left = 112
+    Top = 8
+    object SDS_ActualizadorUPGRADE: TSmallintField
+      FieldName = 'UPGRADE'
+    end
+    object SDS_ActualizadorACTUAL: TSmallintField
+      FieldName = 'ACTUAL'
+    end
+    object SDS_ActualizadorADM_8: TSmallintField
+      FieldName = 'ADM_8'
+    end
+    object SDS_ActualizadorADM_ALTA: TSmallintField
+      FieldName = 'ADM_ALTA'
+    end
+    object SDS_ActualizadorADM_GLENY: TSmallintField
+      FieldName = 'ADM_GLENY'
+    end
+    object SDS_ActualizadorADM_MIGUELITO: TSmallintField
+      FieldName = 'ADM_MIGUELITO'
+    end
+    object SDS_ActualizadorADM_RAQUEL: TSmallintField
+      FieldName = 'ADM_RAQUEL'
+    end
+    object SDS_ActualizadorADM_ROBERTO: TSmallintField
+      FieldName = 'ADM_ROBERTO'
+    end
+    object SDS_ActualizadorADM_ROSSY: TSmallintField
+      FieldName = 'ADM_ROSSY'
+    end
+    object SDS_ActualizadorADM_SOPORTE: TSmallintField
+      FieldName = 'ADM_SOPORTE'
+    end
+    object SDS_ActualizadorALCARRIZOS: TSmallintField
+      FieldName = 'ALCARRIZOS'
+    end
+    object SDS_ActualizadorALMACEN: TSmallintField
+      FieldName = 'ALMACEN'
+    end
+    object SDS_ActualizadorBOCA_CHICA: TSmallintField
+      FieldName = 'BOCA_CHICA'
+    end
+    object SDS_ActualizadorCAMBITA: TSmallintField
+      FieldName = 'CAMBITA'
+    end
+    object SDS_ActualizadorELECTROMUEBLES: TSmallintField
+      FieldName = 'ELECTROMUEBLES'
+    end
+    object SDS_ActualizadorELIAS_PINA: TSmallintField
+      FieldName = 'ELIAS_PINA'
+    end
+    object SDS_ActualizadorEXTRA_1: TSmallintField
+      FieldName = 'EXTRA_1'
+    end
+    object SDS_ActualizadorEXTRA_2: TSmallintField
+      FieldName = 'EXTRA_2'
+    end
+    object SDS_ActualizadorEXTRA_3: TSmallintField
+      FieldName = 'EXTRA_3'
+    end
+    object SDS_ActualizadorHAINA_1: TSmallintField
+      FieldName = 'HAINA_1'
+    end
+    object SDS_ActualizadorHAINA_2: TSmallintField
+      FieldName = 'HAINA_2'
+    end
+    object SDS_ActualizadorHAINA_3: TSmallintField
+      FieldName = 'HAINA_3'
+    end
+    object SDS_ActualizadorHATO_NUEVO: TSmallintField
+      FieldName = 'HATO_NUEVO'
+    end
+    object SDS_ActualizadorINDEPENDENCIA: TSmallintField
+      FieldName = 'INDEPENDENCIA'
+    end
+    object SDS_ActualizadorKM_22: TSmallintField
+      FieldName = 'KM_22'
+    end
+    object SDS_ActualizadorKM_25: TSmallintField
+      FieldName = 'KM_25'
+    end
+    object SDS_ActualizadorLA_PARED: TSmallintField
+      FieldName = 'LA_PARED'
+    end
+    object SDS_ActualizadorLAS_AMERICAS: TSmallintField
+      FieldName = 'LAS_AMERICAS'
+    end
+    object SDS_ActualizadorLAS_PALMAS: TSmallintField
+      FieldName = 'LAS_PALMAS'
+    end
+    object SDS_ActualizadorLOS_FRAILES: TSmallintField
+      FieldName = 'LOS_FRAILES'
+    end
+    object SDS_ActualizadorNIGUA_1: TSmallintField
+      FieldName = 'NIGUA_1'
+    end
+    object SDS_ActualizadorNIGUA_2: TSmallintField
+      FieldName = 'NIGUA_2'
+    end
+    object SDS_ActualizadorNIZAO: TSmallintField
+      FieldName = 'NIZAO'
+    end
+    object SDS_ActualizadorPALENQUE: TSmallintField
+      FieldName = 'PALENQUE'
+    end
+    object SDS_ActualizadorPANTOJA: TSmallintField
+      FieldName = 'PANTOJA'
+    end
+    object SDS_ActualizadorQUITA_SUENO: TSmallintField
+      FieldName = 'QUITA_SUENO'
+    end
+    object SDS_ActualizadorSAN_CRISTOBAL: TSmallintField
+      FieldName = 'SAN_CRISTOBAL'
+    end
+    object SDS_ActualizadorSAN_VICENTE: TSmallintField
+      FieldName = 'SAN_VICENTE'
+    end
+    object SDS_ActualizadorVILLA_MELLA: TSmallintField
+      FieldName = 'VILLA_MELLA'
+    end
+    object SDS_ActualizadorUSUARIO: TStringField
+      FieldName = 'USUARIO'
+      Size = 30
+    end
+    object SDS_ActualizadorSERVIDOR: TStringField
+      FieldName = 'SERVIDOR'
+      Size = 50
+    end
+    object SDS_ActualizadorSERVIDOR_ALT: TStringField
+      FieldName = 'SERVIDOR_ALT'
+      Size = 50
+    end
+    object SDS_ActualizadorRUTA_ACTUALIZADOR: TStringField
+      FieldName = 'RUTA_ACTUALIZADOR'
+      Size = 50
+    end
+    object SDS_ActualizadorCLAVE: TStringField
+      FieldName = 'CLAVE'
+      Size = 30
+    end
   end
 end

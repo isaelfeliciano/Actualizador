@@ -127,7 +127,6 @@ type
     SDS_ActualizadorSERVIDOR: TStringField;
     SDS_ActualizadorSERVIDOR_ALT: TStringField;
     SDS_ActualizadorRUTA_ACTUALIZADOR: TStringField;
-    SDS_ActualizadorCLAVE: TStringField;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -181,7 +180,7 @@ type
 
 var
   FActualizador: TFActualizador;
-  Ini, Ini2, Ini3  : TIniFile;
+  Ini, Ini2  : TIniFile;
   Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1, Fecha1, Fecha2, CadBat, LetraDisco: String;
   Usuario, Clave, Servidor :String;
   Num1, Num2, Num_Act: Integer;
@@ -189,9 +188,9 @@ var
   Hora_Mod: TDateTime;
   Auto_Act, PararEjecucion: Boolean;
   //
-  Afiles, Afiles2: TStringList;
+  Afiles: TStringList;
   i,r,BarraProgreso: Integer;
-  FTP, FTP2: TIdFTP;
+  FTP: TIdFTP;
 implementation
 
 uses UnuevaAct, Ulistar;
@@ -364,7 +363,6 @@ Barra, o: Integer;
 Directorio: TStringList;
 begin
   Update;
-  Gauge1.Visible:=True;
   //Gauge1.Progress:= 0;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
@@ -626,7 +624,6 @@ TrayIcon1.Show;
 Timer1.Enabled:= True;
 SQLConnection1.Close;
 SimpleDataSet1.Connection:= SQLConnection1;
-SDS_Actualizador.Connection:=SQLConnection1;
 Cad3:='ADM_SOPORTE';
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
@@ -654,12 +651,11 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
-   AutoAct;
-   //CompararFecha;
-   //CompararFecha2;
+   CompararFecha;
+   CompararFecha2;
    Timer2.Enabled:= True;
-   Timer5.Enabled:= False;
-   //PonerProgramaInicio;
+   Timer5.Enabled:= True;
+   PonerProgramaInicio;
   end;
    //if Terminal = 'Adm_Soporte' then begin
 
@@ -781,125 +777,22 @@ begin
 end;
 
 Procedure TFActualizador.AutoAct;
-var Upgrade, Suc :Integer;
-lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
-temp4 :TStrings;
+var lpFileOp: TSHFileOpStruct; Ruta_AutoAct: String;
 begin
-Timer5.Enabled:= False;
-Ini3 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
-SDS_Actualizador.Open;
-Upgrade:= SDS_ActualizadorUPGRADE.AsInteger;
-try
-Suc:= StrToInt(Ini3.ReadString('ComboBox1', 'Num_Actualizador', ''));
-except
-Ini3.WriteString('ComboBox1', 'Num_Actualizador', '1');
-end;
-SDS_Actualizador.Close;
-if Suc < Upgrade then
-begin
-If FileExists(Ruta + 'Actualizador\Easy_Actualizador.exe') then
-    begin
-        DeleteFile(Ruta + 'Actualizador\Easy_Actualizador.exe');
-      end;
+//Timer3.Enabled:= False;
+Ruta_AutoAct:= Ruta+'Actualizador\*.*';
+    lpFileOp.Wnd := Self.Handle;
+    lpFileOp.wFunc := FO_COPY;
+    lpFileOp.pFrom := PChar(Ruta_AutoAct + #0#0);
+    lpFileOp.pTo := PChar(Ruta + #0#0);
+    lpFileOp.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY or FOF_NOCONFIRMATION;
+    lpFileOp.fAnyOperationsAborted := FALSE;
+    lpFileOp.hNameMappings := nil;
+    lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
+    FActualizador.Close;
 
-Update;
-  //Gauge1.Progress:= 0;
-
-  FTP2 := TIdFTP.Create( nil );
-  //FTP2.OnWork := IdFTP1Work;
-  //FTP.EndWork(wmRead):= IdFTP1WorkEnd
-  SDS_Actualizador.Open;
-  FTP2.Username := SDS_ActualizadorUSUARIO.AsString;
-  FTP2.Password := SDS_ActualizadorCLAVE.AsString;
-  FTP2.Host := SDS_ActualizadorSERVIDOR.AsString;
-  SDS_Actualizador.Close;
-
-  try
-    FTP2.Connect;
-
-   except
-   //Usando el servidor alterno
-   SDS_Actualizador.Open;
-   FTP2.Host:= SDS_ActualizadorSERVIDOR_ALT.AsString;
-   SDS_Actualizador.Close;
-   try
-   FTP2.Connect;
-   except
-    raise Exception.Create( 'No se ha podido conectar con el servidor. ');
-  end;
-  end;
-  SDS_Actualizador.Open;
-  FTP2.ChangeDir( SDS_ActualizadorRUTA_ACTUALIZADOR.AsString );
-  SDS_Actualizador.Close;
-  Afiles2:= TStringList.Create;
-  FTP2.List(AFiles2, 'Easy_Actualizador.exe', False);
-    {for r := 0 to Afiles.Count -1 do begin
-      Barra:= Barra + FTP.Size( ExtractFileName( AFiles[r] ) );
-    end;
-  Gauge1.MinValue:= 0;
-  Gauge1.MaxValue:= Barra;}
-  for i := 0 to Afiles2.Count -1 do begin
-          //ListBox1.Items.add(AFiles[i]);
-
-
-   //Label1.Caption:= Afiles[i];
-   try
-    //PararEjecucion:= False;
-    FTP2.BeginWork(wmRead);
-    FTP2.Get( ExtractFileName(AFiles2[i]), LetraDisco+'\Easy System S2010\Actualizador\'+AFiles2[i], True, True );
-    Sleep(500);
-    Except
-
-      raise Exception.Create( 'No se ha podido iniciar la descarga. ');
-      //PararEjecucion:= True;
-      //Timer3.Enabled:= True;
-
-   end;
- end;
- //If PararEjecucion = True then begin
- //Exit;
- //End
- //Else
- //Begin
- FTP2.EndWork(wmRead);
- FTP2.Disconnect;
- FTP2.Free;
- //if Gauge1.Progress =  Gauge1.MaxValue then begin
- //CerrarEs;
- temp4 := TStringList.Create;
-   try
-     temp4.Add('@echo off');
-     temp4.Add('taskkill /f /im Easy_Actualizador.exe');
-     temp4.Add('sleep 20');
-     temp4.Add('copy /y /v "'+Ruta+'Actualizador\Easy_Actualizador.exe"  "'+Ruta);
-     temp4.Add(LetraDisco);
-     temp4.Add('cd \easy system s2010\');
-     temp4.Add('sleep 20');
-     temp4.Add('start Easy_Actualizador.exe');
-     temp4.SaveToFile(Ruta+'copyAct.bat');
-   finally
-     temp4.Free;
-   end;
-   sql:= 'UPDATE AUTO_ACT  SET '+Terminal+ ' = ' +IntToStr(Upgrade);
-  SQLConnection1.Execute(sql, nil, nil);
-  Ini3 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
-  Ini3.WriteString( 'ComboBox1', 'Num_Actualizador', IntToStr(Upgrade) );
-  Timer5.Enabled:= True;
-  shellexecute(Handle, 'open',Pchar(Ruta+'copyAct.bat'),nil,nil,SW_HIDE);
-  sleep(1000);
-
-  FActualizador.Close;
-  //shellexecute(Handle, 'open',Pchar(Ruta+'copy.bat'),nil,nil,SW_HIDE);
-  //end
-  //else begin
-  //Timer5.Enabled:= True;
-  end;
- 
-
-
- //end;
-//end
-
+    { Mover el archivo }
+    SHFileOperation(lpFileOp);
 end;
 
 procedure TFActualizador.Timer3Timer(Sender: TObject);
@@ -1082,9 +975,8 @@ end;
 
 procedure TFActualizador.Timer5Timer(Sender: TObject);
 begin
-//AutoAct;
-//CompararFecha;
-//CompararFecha2
+CompararFecha;
+CompararFecha2
 end;
 
 procedure TFActualizador.IdFTP1Work(Sender: TObject; AWorkMode: TWorkMode;
