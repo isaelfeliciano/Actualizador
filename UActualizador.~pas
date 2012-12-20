@@ -364,6 +364,8 @@ Barra, o: Integer;
 Directorio: TStringList;
 begin
   Update;
+  Gauge1.Visible:=True;
+  Update;
   //Gauge1.Progress:= 0;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
@@ -893,7 +895,7 @@ Update;
   //else begin
   //Timer5.Enabled:= True;
   end;
- Gauge1.Visible:= False;
+ 
 
 
  //end;

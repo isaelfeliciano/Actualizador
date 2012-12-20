@@ -237,7 +237,7 @@ begin
 /////////////////////////////PROBANDO CONEXION: INICIO
 Procedure TFActualizador.Probar_Conexion;
 begin
-Label2.Caption:= 'Probando Conección';
+Label2.Caption:= 'Probando Conexion';
 Update;
 Timer2.Enabled:= False;
 if Modo = 'Local' then
@@ -251,17 +251,26 @@ IdIcmpClient1.Ping;
 
 if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
     begin
-      Label1.Caption:= 'No Conectado';
-      Timer2.Enabled:= True;
+      Label1.Caption:= 'Ping incorrecto @'+ IpServidor;
+      //Timer2.Enabled:= True;
     end else begin
-      Label1.Caption:= 'Conectado '+ IpServidor;
+      Label1.Caption:= 'Ping correcto @'+ IpServidor;
       if ProcessExists('fbserver.exe') then
         begin
         //ShowMessage('hola');
+        try
         SQLConnection1.Open;
+        except
+        Timer1.Enabled:= True;
+        FActualizador.Top:= Screen.WorkAreaHeight +187;
+        FActualizador.Left:= Screen.WorkAreaWidth +597;
+        exit;
+        end;
         SimpleDataSet1.Open;
         Num2:= SimpleDataSet1UPGRADE.AsInteger;
         SimpleDataSet1.Close;
+        AutoAct;
+        Sleep(500);
         Rev_Nueva_Act;
         end
         else
@@ -287,9 +296,9 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   if Num1 < Num2 then
   begin
    Timer2.Enabled:= False;
-   FActualizador.Top:= Screen.WorkAreaHeight -187;
-   FActualizador.Left:= Screen.WorkAreaWidth -597;
-   Label2.Caption:= 'Preparando la descarga'; 
+   FActualizador.Top:= Screen.WorkAreaHeight +187;
+   FActualizador.Left:= Screen.WorkAreaWidth +597;
+   Label2.Caption:= 'Preparando la descarga';
    Update;
    Sleep(1000);
    DescargarArchivo;  
@@ -365,6 +374,7 @@ Directorio: TStringList;
 begin
   Update;
   Gauge1.Visible:=True;
+  Update;
   //Gauge1.Progress:= 0;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
@@ -443,7 +453,9 @@ begin
  if Gauge1.Progress =  Gauge1.MaxValue then begin
  CerrarEs;
  Gauge1.Visible:= False;
-
+ Timer1.Enabled:= False;
+ //Label2.Caption:= 'Descarga completa';
+ //Update;
  end;
  end;
 //end;
@@ -513,6 +525,7 @@ Update;
 Gauge1.Progress:= 0;
 Sleep(1000);
 Timer2.Enabled:= True;
+Timer1.Enabled:= True;
 //ShowMessage('Actualizacion Completa. Puede abrir el SISTEMA');
 end;
 
@@ -623,7 +636,7 @@ begin
 FActualizador.Top:= Screen.WorkAreaHeight -187;
 FActualizador.Left:= Screen.WorkAreaWidth -597;
 TrayIcon1.Show;
-Timer1.Enabled:= True;
+Timer1.Enabled:= False;
 SQLConnection1.Close;
 SimpleDataSet1.Connection:= SQLConnection1;
 SDS_Actualizador.Connection:=SQLConnection1;
@@ -654,7 +667,8 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
-   AutoAct;
+   Probar_Conexion;
+   //AutoAct;
    //CompararFecha;
    //CompararFecha2;
    Timer2.Enabled:= True;
@@ -762,10 +776,10 @@ end;
 
 procedure TFActualizador.Timer2Timer(Sender: TObject);
 begin
-Probar_Conexion;
+//Probar_Conexion;
 FActualizador.Top:= Screen.WorkAreaHeight +187;
 FActualizador.Left:= Screen.WorkAreaWidth +597;
-Timer2.Enabled:= False;
+//Timer2.Enabled:= False;
 end;
 
 procedure TFActualizador.MostrarActualizador1Click(Sender: TObject);
