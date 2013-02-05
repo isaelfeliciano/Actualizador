@@ -1144,6 +1144,7 @@ object FActualizador: TFActualizador
       'Boca_Chica'
       'Cambita'
       'Electromuebles'
+      'Elias_Pina2'
       'Elias_Pi'#241'a'
       'Extra_1'
       'Extra_2'

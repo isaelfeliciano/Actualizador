@@ -173,15 +173,15 @@ type
   Procedure CerrandoEs;
   Procedure CompararFecha;
   Procedure CompararFecha2;
-  Function  processExists(exeFileName: string): Boolean;
-  Function  GetFileTimes(FileName : string; var Created : TDateTime;
-       var  Modified : TDateTime; var Accessed : TDateTime) : boolean;
+  Function processExists(exeFileName: string): Boolean;
+  Function GetFileTimes(FileName : string; var Created : TDateTime;
+       var Modified : TDateTime; var Accessed : TDateTime) : boolean;
 
   end;
 
 var
   FActualizador: TFActualizador;
-  Ini, Ini2, Ini3  : TIniFile;
+  Ini, Ini2, Ini3 : TIniFile;
   Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1, Fecha1, Fecha2, CadBat, LetraDisco: String;
   Usuario, Clave, Servidor :String;
   Num1, Num2, Num_Act: Integer;
@@ -251,26 +251,17 @@ IdIcmpClient1.Ping;
 
 if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
     begin
-      Label1.Caption:= 'Ping incorrecto @'+ IpServidor;
-      //Timer2.Enabled:= True;
+      Label1.Caption:= 'No Conectado';
+      Timer2.Enabled:= True;
     end else begin
-      Label1.Caption:= 'Ping correcto @'+ IpServidor;
+      Label1.Caption:= 'Conectado '+ IpServidor;
       if ProcessExists('fbserver.exe') then
         begin
         //ShowMessage('hola');
-        try
         SQLConnection1.Open;
-        except
-        Timer1.Enabled:= True;
-        FActualizador.Top:= Screen.WorkAreaHeight +187;
-        FActualizador.Left:= Screen.WorkAreaWidth +597;
-        exit;
-        end;
         SimpleDataSet1.Open;
         Num2:= SimpleDataSet1UPGRADE.AsInteger;
         SimpleDataSet1.Close;
-        AutoAct;
-        Sleep(500);
         Rev_Nueva_Act;
         end
         else
@@ -296,26 +287,26 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   if Num1 < Num2 then
   begin
    Timer2.Enabled:= False;
-   FActualizador.Top:= Screen.WorkAreaHeight +187;
-   FActualizador.Left:= Screen.WorkAreaWidth +597;
+   FActualizador.Top:= Screen.WorkAreaHeight -187;
+   FActualizador.Left:= Screen.WorkAreaWidth -597;
    Label2.Caption:= 'Preparando la descarga';
    Update;
    Sleep(1000);
-   DescargarArchivo;  
+   DescargarArchivo;
   
   
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: FIN
 //shellexecute(Handle, 'open','taskkill /f /im Easy_System_S2010.exe',nil,nil,SW_NORMAL);
 
  {Label2.Caption:= 'Copiando Rars...';
- Copiando_Rars;
+Copiando_Rars;
+end
+else begin
+Label2.Caption:= 'No hay Actualizaciones';
+Timer2.Enabled:=True;}
   end
   else begin
-  Label2.Caption:= 'No hay Actualizaciones';
-  Timer2.Enabled:=True;}
-  end
-  else begin
-    Label2.Caption:= 'ACTUALIZADO v.' + IntToStr(Num2);  
+    Label2.Caption:= 'ACTUALIZADO v.' + IntToStr(Num2);
   end;
 end;
 
@@ -323,6 +314,8 @@ end;
 Procedure TFActualizador.CerrarEs;
 var PreviousHandle2 :THandle;
 begin
+ Timer1.Enabled:= False;
+ Timer2.Enabled:= False;
  if processExists('Easy_System_S2010.exe') then
   begin
     PreviousHandle2:= FindWindow('TFNuevaAct', 'Nueva Actualizacion');
@@ -374,7 +367,6 @@ Directorio: TStringList;
 begin
   Update;
   Gauge1.Visible:=True;
-  Update;
   //Gauge1.Progress:= 0;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
@@ -411,7 +403,11 @@ begin
    try
    FTP.Connect;
    except
-    raise Exception.Create( 'No se ha podido conectar con el servidor. ');
+    Label2.Caption:= 'No se ha podido conectar al servidor FTP.';
+    Update;
+    Timer1.Enabled:= True;
+    Exit;
+    //raise Exception.Create( 'No se ha podido conectar con el servidor. ');
   end;
   end;
   SimpleDataSet1.Open;
@@ -450,12 +446,10 @@ begin
  FTP.EndWork(wmRead);
  FTP.Disconnect;
  FTP.Free;
- if Gauge1.Progress =  Gauge1.MaxValue then begin
+ if Gauge1.Progress = Gauge1.MaxValue then begin
  CerrarEs;
  Gauge1.Visible:= False;
- Timer1.Enabled:= False;
- //Label2.Caption:= 'Descarga completa';
- //Update;
+
  end;
  end;
 //end;
@@ -508,7 +502,7 @@ For i:= 25 to 75 do
 Label2.Caption:= 'Modificando Base de Datos...';
 Update;
 sleep(1000);
-sql:= 'UPDATE ACTUALIZADOR  SET '+Terminal+ ' = ' +IntToStr(Num2);
+sql:= 'UPDATE ACTUALIZADOR SET '+Terminal+ ' = ' +IntToStr(Num2);
 SQLConnection1.Execute(sql, nil, nil);
 Ini := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 Ini.WriteString( 'ComboBox1', 'Num_Act', IntToStr(Num2) );
@@ -525,34 +519,33 @@ Update;
 Gauge1.Progress:= 0;
 Sleep(1000);
 Timer2.Enabled:= True;
-Timer1.Enabled:= True;
 //ShowMessage('Actualizacion Completa. Puede abrir el SISTEMA');
 end;
 
 
-///////////////////////////////BORRANDO RAR'S: INICIO  no en uso
+///////////////////////////////BORRANDO RAR'S: INICIO no en uso
 Procedure TFActualizador.Borrar_Rars;
 var File_Existe: String; lpFileOp2: TSHFileOpStruct;
 begin
 {File_Existe:= Ruta+'Easy_System_S2010.exe';
 if ExisteArchivo(File_Existe) = False then
-  begin
-    Borrar_Rars;
-    end
-    else
-    begin
-    lpFileOp2.Wnd := Self.Handle;
-    lpFileOp2.wFunc := FO_DELETE;
-    lpFileOp2.pFrom := PChar(Ruta+'Easy_System_S2010.*.rar' + #0#0);
-    lpFileOp2.pTo := nil;
-    lpFileOp2.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY or FOF_NOCONFIRMATION;
-    lpFileOp2.fAnyOperationsAborted := FALSE;
-    lpFileOp2.hNameMappings := nil;
-    lpFileOp2.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
+begin
+Borrar_Rars;
+end
+else
+begin
+lpFileOp2.Wnd := Self.Handle;
+lpFileOp2.wFunc := FO_DELETE;
+lpFileOp2.pFrom := PChar(Ruta+'Easy_System_S2010.*.rar' + #0#0);
+lpFileOp2.pTo := nil;
+lpFileOp2.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY or FOF_NOCONFIRMATION;
+lpFileOp2.fAnyOperationsAborted := FALSE;
+lpFileOp2.hNameMappings := nil;
+lpFileOp2.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
 
 
-    SHFileOperation(lpFileOp2);
-    end;}
+SHFileOperation(lpFileOp2);
+end;}
 
 
   end;
@@ -636,7 +629,7 @@ begin
 FActualizador.Top:= Screen.WorkAreaHeight -187;
 FActualizador.Left:= Screen.WorkAreaWidth -597;
 TrayIcon1.Show;
-Timer1.Enabled:= False;
+Timer1.Enabled:= True;
 SQLConnection1.Close;
 SimpleDataSet1.Connection:= SQLConnection1;
 SDS_Actualizador.Connection:=SQLConnection1;
@@ -644,20 +637,20 @@ Cad3:='ADM_SOPORTE';
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
     Configurado:= Ini2.ReadString( 'ComboBox1', 'Iniciado?', '' );
-    Terminal:=    Ini2.ReadString( 'ComboBox1', 'Terminal', '' );
-    Modo:=        Ini2.ReadString( 'ComboBox1', 'Modo', '' );
+    Terminal:= Ini2.ReadString( 'ComboBox1', 'Terminal', '' );
+    Modo:= Ini2.ReadString( 'ComboBox1', 'Modo', '' );
     Num1:=StrToInt(Ini2.ReadString('ComboBox1', 'Num_Act', ''));
-    Ruta:=        Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
-    Ruta_Winrar:=Ini2.ReadString(  'ComboBox1', 'Ruta_Winrar', '' );
-    Ruta_Act:=   Ini2.ReadString(  'ComboBox1', 'Ruta_Act', '' );
-    LetraDisco:= Ini2.ReadString(  'ComboBox1', 'LetraDisco', '' );
+    Ruta:= Ini2.ReadString( 'ComboBox1', 'Rutas', '' );
+    Ruta_Winrar:=Ini2.ReadString( 'ComboBox1', 'Ruta_Winrar', '' );
+    Ruta_Act:= Ini2.ReadString( 'ComboBox1', 'Ruta_Act', '' );
+    LetraDisco:= Ini2.ReadString( 'ComboBox1', 'LetraDisco', '' );
     //ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
      
-    //Hora_Mod:=StrToDate(Ini2.ReadString(  'ComboBox1', 'Hora_Mod', '' ));
+    //Hora_Mod:=StrToDate(Ini2.ReadString( 'ComboBox1', 'Hora_Mod', '' ));
     {SQLConnection1.Open;
-    SimpleDataSet1.Open;
-    Num2:= SimpleDataSet1UPGRADE.AsInteger;
-    SimpleDataSet1.Close;}
+SimpleDataSet1.Open;
+Num2:= SimpleDataSet1UPGRADE.AsInteger;
+SimpleDataSet1.Close;}
   if Configurado = 'SI' then
     begin
    CbLetraDisco.Visible:= False;
@@ -667,8 +660,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
-   Probar_Conexion;
-   //AutoAct;
+   AutoAct;
    //CompararFecha;
    //CompararFecha2;
    Timer2.Enabled:= True;
@@ -681,7 +673,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     //SimpleDataSet1.Close;
      //if Num1 < Num2 then
       //Iniciar Copiar
-      //SimpleDataSet1.DataSet.CommandText := 'UPDATE ACTUALIZADOR  SET ADM_SOPORTE = ADM_SOPORTE + 1';
+      //SimpleDataSet1.DataSet.CommandText := 'UPDATE ACTUALIZADOR SET ADM_SOPORTE = ADM_SOPORTE + 1';
       //SimpleDataSet1.Open;
 end;
 
@@ -699,16 +691,16 @@ begin
 
     { Relleno de la estructura }
     {lpFileOp.Wnd := Self.Handle;
-    lpFileOp.wFunc := FO_COPY;
-    lpFileOp.pFrom := PChar('D:\Actualizaciones\*.*' + #0#0);
-    lpFileOp.pTo := PChar('D:\Easy System S2010' + #0#0);
-    lpFileOp.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY;
-    lpFileOp.fAnyOperationsAborted := FALSE;
-    lpFileOp.hNameMappings := nil;
-    lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
-    ProgressBar1.Position:= 50;
+lpFileOp.wFunc := FO_COPY;
+lpFileOp.pFrom := PChar('D:\Actualizaciones\*.*' + #0#0);
+lpFileOp.pTo := PChar('D:\Easy System S2010' + #0#0);
+lpFileOp.fFlags:= FOF_SIMPLEPROGRESS or FOF_FILESONLY;
+lpFileOp.fAnyOperationsAborted := FALSE;
+lpFileOp.hNameMappings := nil;
+lpFileOp.lpszProgressTitle := PChar('Trasladando archivos al disco D' + #0#0);
+ProgressBar1.Position:= 50;
 
-    { Mover el archivo }
+{ Mover el archivo }
     //SHFileOperation(lpFileOp);
 
  //origen:= 'D:\Actualizaciones\*.*';
@@ -731,12 +723,12 @@ begin
   begin
     if LoginPrompt = False then
     begin
-      if Modo = 'Local' then 
+      if Modo = 'Local' then
       begin
         IpServidor:= '10.0.0.15';
         SQLConnection1.Params.Values['Database']:= '10.0.0.15:D:\Easy System News\DATA.FDB';
       end;
-      if Modo = 'Remoto' then 
+      if Modo = 'Remoto' then
       begin
         IpServidor:= '25.108.175.106';
         SQLConnection1.Params.Values['Database']:= '25.108.175.106:D:\Easy System News\DATA.FDB';
@@ -776,10 +768,10 @@ end;
 
 procedure TFActualizador.Timer2Timer(Sender: TObject);
 begin
-//Probar_Conexion;
+Probar_Conexion;
 FActualizador.Top:= Screen.WorkAreaHeight +187;
 FActualizador.Left:= Screen.WorkAreaWidth +597;
-//Timer2.Enabled:= False;
+Timer2.Enabled:= False;
 end;
 
 procedure TFActualizador.MostrarActualizador1Click(Sender: TObject);
@@ -848,10 +840,10 @@ Update;
   Afiles2:= TStringList.Create;
   FTP2.List(AFiles2, 'Easy_Actualizador.exe', False);
     {for r := 0 to Afiles.Count -1 do begin
-      Barra:= Barra + FTP.Size( ExtractFileName( AFiles[r] ) );
-    end;
-  Gauge1.MinValue:= 0;
-  Gauge1.MaxValue:= Barra;}
+Barra:= Barra + FTP.Size( ExtractFileName( AFiles[r] ) );
+end;
+Gauge1.MinValue:= 0;
+Gauge1.MaxValue:= Barra;}
   for i := 0 to Afiles2.Count -1 do begin
           //ListBox1.Items.add(AFiles[i]);
 
@@ -878,14 +870,14 @@ Update;
  FTP2.EndWork(wmRead);
  FTP2.Disconnect;
  FTP2.Free;
- //if Gauge1.Progress =  Gauge1.MaxValue then begin
+ //if Gauge1.Progress = Gauge1.MaxValue then begin
  //CerrarEs;
  temp4 := TStringList.Create;
    try
      temp4.Add('@echo off');
      temp4.Add('taskkill /f /im Easy_Actualizador.exe');
      temp4.Add('sleep 20');
-     temp4.Add('copy /y /v "'+Ruta+'Actualizador\Easy_Actualizador.exe"  "'+Ruta);
+     temp4.Add('copy /y /v "'+Ruta+'Actualizador\Easy_Actualizador.exe" "'+Ruta);
      temp4.Add(LetraDisco);
      temp4.Add('cd \easy system s2010\');
      temp4.Add('sleep 20');
@@ -894,7 +886,7 @@ Update;
    finally
      temp4.Free;
    end;
-   sql:= 'UPDATE AUTO_ACT  SET '+Terminal+ ' = ' +IntToStr(Upgrade);
+   sql:= 'UPDATE AUTO_ACT SET '+Terminal+ ' = ' +IntToStr(Upgrade);
   SQLConnection1.Execute(sql, nil, nil);
   Ini3 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   Ini3.WriteString( 'ComboBox1', 'Num_Actualizador', IntToStr(Upgrade) );
@@ -1034,7 +1026,7 @@ begin
      temp2.Add('@echo off');
      temp2.Add('taskkill /f /im Easy_Actualizador.exe');
      temp2.Add('sleep 20');
-     temp2.Add('copy /y /v "'+Ruta+'Actualizador\easy_actualizador.exe"  "'+Ruta);
+     temp2.Add('copy /y /v "'+Ruta+'Actualizador\easy_actualizador.exe" "'+Ruta);
      temp2.Add(LetraDisco);
      temp2.Add('cd \easy system s2010\');
      temp2.Add('sleep 20');
@@ -1074,7 +1066,7 @@ begin
    temp3 := TStringList.Create;
    try
      temp3.Add('@echo off');
-     temp3.Add('copy /y /v "'+LetraDisco+'\Actualizaciones\Reportes Net.rar"  "'+Ruta);
+     temp3.Add('copy /y /v "'+LetraDisco+'\Actualizaciones\Reportes Net.rar" "'+Ruta);
      temp3.Add('path='+Ruta_Winrar);
      temp3.Add('rar.exe x -y "'+ LetraDisco+'\Actualizaciones\Reportes Net.rar" "' + Ruta);
      temp3.SaveToFile(Ruta+'CopyReportes.bat');
