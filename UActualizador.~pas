@@ -403,7 +403,11 @@ begin
    try
    FTP.Connect;
    except
-    raise Exception.Create( 'No se ha podido conectar con el servidor. ');
+    Label2.Caption:= 'No se ha podido conectar al servidor FTP.';
+    Update;
+    Timer1.Enabled:= True;
+    Exit;
+    //raise Exception.Create( 'No se ha podido conectar con el servidor. ');
   end;
   end;
   SimpleDataSet1.Open;

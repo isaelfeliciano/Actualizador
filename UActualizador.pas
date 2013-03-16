@@ -266,7 +266,8 @@ if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
         end
         else
         begin
-        Probar_Conexion;
+        
+        Timer2.Enabled:= True;
         Exit;
         end;
       end;
@@ -432,7 +433,9 @@ begin
     Sleep(500);
     Except
 
-      raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      Label2.Caption:= 'No se ha podido iniciar la descarga. ';
+      Update;
       //PararEjecucion:= True;
       //Timer3.Enabled:= True;
 
@@ -831,7 +834,9 @@ Update;
    try
    FTP2.Connect;
    except
-    raise Exception.Create( 'No se ha podido conectar con el servidor. ');
+    //raise Exception.Create( 'No se ha podido conectar con el servidor. ');
+    Label2.Caption:= 'No se ha podido conectar con el servidor. ';
+    Update;
   end;
   end;
   SDS_Actualizador.Open;
@@ -856,7 +861,9 @@ Gauge1.MaxValue:= Barra;}
     Sleep(500);
     Except
 
-      raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      Label2.Caption:= 'No se ha podido iniciar la descarga. ';
+      Update;
       //PararEjecucion:= True;
       //Timer3.Enabled:= True;
 
