@@ -1097,11 +1097,11 @@ object FActualizador: TFActualizador
     Left = 8
     Top = 8
     Width = 4
-    Height = 20
+    Height = 23
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'MS Sans Serif'
+    Font.Height = -19
+    Font.Name = 'Calibri'
     Font.Style = []
     ParentFont = False
   end
@@ -1116,10 +1116,16 @@ object FActualizador: TFActualizador
     Progress = 0
   end
   object Label2: TLabel
-    Left = 0
+    Left = 8
     Top = 72
-    Width = 3
-    Height = 13
+    Width = 4
+    Height = 19
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Calibri'
+    Font.Style = []
+    ParentFont = False
   end
   object CbTerminal: TComboBox
     Left = 0
@@ -2214,5 +2220,12 @@ object FActualizador: TFActualizador
       FieldName = 'CLAVE'
       Size = 30
     end
+  end
+  object TmReiniciar: TTimer
+    Enabled = False
+    Interval = 5000
+    OnTimer = TmReiniciarTimer
+    Left = 80
+    Top = 8
   end
 end

@@ -128,6 +128,7 @@ type
     SDS_ActualizadorSERVIDOR_ALT: TStringField;
     SDS_ActualizadorRUTA_ACTUALIZADOR: TStringField;
     SDS_ActualizadorCLAVE: TStringField;
+    TmReiniciar: TTimer;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -154,6 +155,7 @@ type
     procedure Timer5Timer(Sender: TObject);
     procedure IdFTP1Work(Sender: TObject; AWorkMode: TWorkMode;
       const AWorkCount: Integer);
+    procedure TmReiniciarTimer(Sender: TObject);
 
 
   private
@@ -166,6 +168,7 @@ type
   procedure PonerProgramaInicio;
   Procedure AutoAct;
   procedure CerrarEs;
+  procedure IniciarApp;
   public
   Ruta: String;
   Procedure DescargarArchivo;
@@ -187,7 +190,7 @@ var
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
-  Auto_Act, PararEjecucion: Boolean;
+  Auto_Act, PararEjecucion, MostrarForm: Boolean;
   //
   Afiles, Afiles2: TStringList;
   i,r,BarraProgreso: Integer;
@@ -237,9 +240,9 @@ begin
 /////////////////////////////PROBANDO CONEXION: INICIO
 Procedure TFActualizador.Probar_Conexion;
 begin
-Label2.Caption:= 'Probando Conexion';
-Update;
 Timer2.Enabled:= False;
+Label2.Caption:= 'Revisando Conexion';
+Update;
 if Modo = 'Local' then
     IpServidor:= '10.0.0.15';
 
@@ -247,18 +250,29 @@ if Modo = 'Local' then
     IpServidor:= '25.108.175.106';
 
 IdIcmpClient1.Host:= IpServidor;
+try
 IdIcmpClient1.Ping;
-
+except
+label2.Caption:= 'No se puedo conectar @' + IpServidor;
+Update;
+end;
 if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
     begin
       Label1.Caption:= 'No Conectado';
-      Timer2.Enabled:= True;
-    end else begin
-      Label1.Caption:= 'Conectado '+ IpServidor;
+      TmReiniciar.Enabled:= True;
+    end
+    else
+      begin
+      Label1.Caption:= 'Conectado @'+ IpServidor;
       if ProcessExists('fbserver.exe') then
         begin
-        //ShowMessage('hola');
+        try
         SQLConnection1.Open;
+        except
+        label2.Caption:= 'No se puedo conectar @' + IpServidor;
+        Update;
+        exit;
+        end;
         SimpleDataSet1.Open;
         Num2:= SimpleDataSet1UPGRADE.AsInteger;
         SimpleDataSet1.Close;
@@ -266,8 +280,13 @@ if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
         end
         else
         begin
-        Probar_Conexion;
+        Label2.Caption:= 'ERROR: El servicio "Firebird" no se esta ejecutando.';
+        Update;
+        TmReiniciar.Enabled:= True;
         Exit;
+        //FActualizador.FormCreate(Self);
+        //Timer2.Enabled:= True;
+        //Exit;
         end;
       end;
 
@@ -286,7 +305,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     SimpleDataSet1.Close;
   if Num1 < Num2 then
   begin
-   Timer2.Enabled:= False;
+   //Timer2.Enabled:= False;
    FActualizador.Top:= Screen.WorkAreaHeight -187;
    FActualizador.Left:= Screen.WorkAreaWidth -597;
    Label2.Caption:= 'Preparando la descarga';
@@ -365,14 +384,14 @@ var
 Barra, o: Integer;
 Directorio: TStringList;
 begin
-  Update;
   Gauge1.Visible:=True;
   //Gauge1.Progress:= 0;
   FActualizador.Top:= Screen.WorkAreaHeight -187;
   FActualizador.Left:= Screen.WorkAreaWidth -597;
-  Timer3.Enabled:= False;
+  //Timer3.Enabled:= False;
   If FileExists(Ruta + 'Easy*.rar') then
     begin
+      Directorio.Free;
       Directorio := TStringList.Create;
       UListar.FListar.Listar(Ruta, Directorio );
       //ShowMessage( Directorio.Text );
@@ -403,9 +422,10 @@ begin
    try
    FTP.Connect;
    except
-    Label2.Caption:= 'No se ha podido conectar al servidor FTP.';
+    Label2.Caption:= 'No se ha podido conectar al servidor FTP .';
     Update;
-    Timer1.Enabled:= True;
+    TmReiniciar.Enabled:= True;
+    //Timer1.Enabled:= True;
     Exit;
     //raise Exception.Create( 'No se ha podido conectar con el servidor. ');
   end;
@@ -427,12 +447,22 @@ begin
    //Label1.Caption:= Afiles[i];
    try
     //PararEjecucion:= False;
+
     FTP.BeginWork(wmRead);
-    FTP.Get( ExtractFileName(AFiles[i]), LetraDisco+'\Easy System S2010\'+AFiles[i], True, True );
+    FTP.Get( ExtractFileName(AFiles[i]), LetraDisco+'\Easy System S2010\'+AFiles[i],True);
     Sleep(500);
     Except
 
-      raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      //on E: Exception do ShowMessage(E.Message + IntToStr(E.HelpContext));
+
+      //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      Afiles.Free;
+      FTP.Disconnect;
+      FTP.Free;
+      Label2.Caption:= 'No se ha podido iniciar la descarga. ';
+      Update;
+      TmReiniciar.Enabled:= True;
+      Exit;
       //PararEjecucion:= True;
       //Timer3.Enabled:= True;
 
@@ -443,6 +473,8 @@ begin
  //End
  //Else
  //Begin
+ Afiles.Destroy;
+ Afiles.Free;
  FTP.EndWork(wmRead);
  FTP.Disconnect;
  FTP.Free;
@@ -625,15 +657,24 @@ end;
 
 procedure TFActualizador.FormCreate(Sender: TObject);
 begin
-
+TrayIcon1.Show;
 FActualizador.Top:= Screen.WorkAreaHeight -187;
 FActualizador.Left:= Screen.WorkAreaWidth -597;
-TrayIcon1.Show;
-Timer1.Enabled:= True;
-SQLConnection1.Close;
-SimpleDataSet1.Connection:= SQLConnection1;
+SimpleDataSet1.Connection:=  SQLConnection1;
 SDS_Actualizador.Connection:=SQLConnection1;
-Cad3:='ADM_SOPORTE';
+IniciarApp;
+//Timer1.Enabled:= True;
+//Timer5.Enabled:= False;
+End;
+
+
+Procedure TFActualizador.IniciarApp;
+begin
+TmReiniciar.Enabled:= False;
+//SQLConnection1.Close;
+
+//Cad3:='ADM_SOPORTE';
+Ini2.Free;
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
     Configurado:= Ini2.ReadString( 'ComboBox1', 'Iniciado?', '' );
@@ -651,6 +692,7 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 SimpleDataSet1.Open;
 Num2:= SimpleDataSet1UPGRADE.AsInteger;
 SimpleDataSet1.Close;}
+
   if Configurado = 'SI' then
     begin
    CbLetraDisco.Visible:= False;
@@ -660,12 +702,16 @@ SimpleDataSet1.Close;}
    CbRutaES.Visible:= False;
    CbRutaApp.Visible:= False;
    CbRuta_Act.Visible:= False;
-   AutoAct;
+   //AutoAct;
+   Timer2.Enabled:= True;
+   
+   //FActualizador.Top:= Screen.WorkAreaHeight +187;
+   //FActualizador.Left:= Screen.WorkAreaWidth +597;
    //CompararFecha;
    //CompararFecha2;
-   Timer2.Enabled:= True;
-   Timer5.Enabled:= False;
+
    //PonerProgramaInicio;
+
   end;
    //if Terminal = 'Adm_Soporte' then begin
 
@@ -676,7 +722,6 @@ SimpleDataSet1.Close;}
       //SimpleDataSet1.DataSet.CommandText := 'UPDATE ACTUALIZADOR SET ADM_SOPORTE = ADM_SOPORTE + 1';
       //SimpleDataSet1.Open;
 end;
-
 
 procedure TFActualizador.BitBtn3Click(Sender: TObject);
 var lpFileOp: TSHFileOpStruct;
@@ -738,7 +783,7 @@ begin
 end;
 procedure TFActualizador.Timer1Timer(Sender: TObject);
 begin
-Probar_Conexion;
+//Probar_Conexion;
 end;
 
 procedure TFActualizador.ActualizarAhora1Click(Sender: TObject);
@@ -771,7 +816,7 @@ begin
 Probar_Conexion;
 FActualizador.Top:= Screen.WorkAreaHeight +187;
 FActualizador.Left:= Screen.WorkAreaWidth +597;
-Timer2.Enabled:= False;
+//Timer2.Enabled:= False;
 end;
 
 procedure TFActualizador.MostrarActualizador1Click(Sender: TObject);
@@ -793,7 +838,13 @@ temp4 :TStrings;
 begin
 Timer5.Enabled:= False;
 Ini3 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
+try
 SDS_Actualizador.Open;
+except
+Label2.Caption:= 'Intento de conexion fallida.';
+TmReiniciar.Enabled:= True;
+exit;
+end;
 Upgrade:= SDS_ActualizadorUPGRADE.AsInteger;
 try
 Suc:= StrToInt(Ini3.ReadString('ComboBox1', 'Num_Actualizador', ''));
@@ -831,7 +882,9 @@ Update;
    try
    FTP2.Connect;
    except
-    raise Exception.Create( 'No se ha podido conectar con el servidor. ');
+    //raise Exception.Create( 'No se ha podido conectar con el servidor. ');
+    Label2.Caption:= 'No se ha podido conectar con el servidor. ';
+    Update;
   end;
   end;
   SDS_Actualizador.Open;
@@ -856,7 +909,9 @@ Gauge1.MaxValue:= Barra;}
     Sleep(500);
     Except
 
-      raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
+      Label2.Caption:= 'No se ha podido iniciar la descarga. ';
+      Update;
       //PararEjecucion:= True;
       //Timer3.Enabled:= True;
 
@@ -1124,6 +1179,15 @@ begin
     ContinueLoop := Process32Next(FSnapshotHandle, FProcessEntry32);
   end;
   CloseHandle(FSnapshotHandle);
+end;
+
+procedure TFActualizador.TmReiniciarTimer(Sender: TObject);
+begin
+Label2.Caption:= 'Reiniciando aplicación.';
+Update;
+MostrarForm:= False;
+IniciarApp;
+//TmReiniciar.Enabled:= False;
 end;
 
 end.
