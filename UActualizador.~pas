@@ -129,6 +129,7 @@ type
     SDS_ActualizadorRUTA_ACTUALIZADOR: TStringField;
     SDS_ActualizadorCLAVE: TStringField;
     TmReiniciar: TTimer;
+    TmInicioWindows: TTimer;
     
       
     procedure BitBtn1Click(Sender: TObject);
@@ -156,6 +157,7 @@ type
     procedure IdFTP1Work(Sender: TObject; AWorkMode: TWorkMode;
       const AWorkCount: Integer);
     procedure TmReiniciarTimer(Sender: TObject);
+    procedure TmInicioWindowsTimer(Sender: TObject);
 
 
   private
@@ -184,9 +186,9 @@ type
 
 var
   FActualizador: TFActualizador;
-  Ini, Ini2, Ini3 : TIniFile;
+  Ini, Ini2, Ini3, Ini4 : TIniFile;
   Configurado, Terminal, Cad3, Sql, Ruta,Ruta_Winrar,Ruta_Act, IpServidor, Modo, Path1, Fecha1, Fecha2, CadBat, LetraDisco: String;
-  Usuario, Clave, Servidor :String;
+  Usuario, Clave, Servidor, FechaInicio1, FechaInicio2 :String;
   Num1, Num2, Num_Act: Integer;
   lpFileOp: TSHFileOpStruct;
   Hora_Mod: TDateTime;
@@ -229,7 +231,9 @@ begin
     Registro.WriteString( ExtractFileName( Application.ExeName ), Application.ExeName );
     Registro.CloseKey;
     except
-       MessageDlg('No se pudo config. el auto-inicio, de la utilidad de actualizacion automatica de Easy System', mtWarning, [mbOK], 0);
+       //MessageDlg('No se pudo config. el auto-inicio, de la utilidad de actualizacion automatica de Easy System', mtWarning, [mbOK], 0);
+       Label2.Caption:= 'No se pudo config. el auto-inicio, de la utilidad de ' +
+       'actualizacion automatica de Easy System';
   end;
 
   Registro.Free;
@@ -240,6 +244,7 @@ begin
 /////////////////////////////PROBANDO CONEXION: INICIO
 Procedure TFActualizador.Probar_Conexion;
 begin
+Timer1.Enabled:= False;
 Timer2.Enabled:= False;
 Label2.Caption:= 'Revisando Conexion';
 Update;
@@ -276,7 +281,8 @@ if IdIcmpClient1.ReplyStatus.BytesReceived = 0 then
         SimpleDataSet1.Open;
         Num2:= SimpleDataSet1UPGRADE.AsInteger;
         SimpleDataSet1.Close;
-        Rev_Nueva_Act;
+        AutoAct;
+        //Rev_Nueva_Act;
         end
         else
         begin
@@ -296,9 +302,11 @@ end;
 ///////////////////////////////REVISANDO NUEVA ACTUALIZACION: INICIO
 Procedure TFActualizador.Rev_Nueva_Act;
 begin
+ini2.Free;
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
     Num1:=StrToInt(Ini2.ReadString('ComboBox1', 'Num_Act', ''));
+    Ini2.Free;
     SQLConnection1.Open;
     SimpleDataSet1.Open;
     Num2:= SimpleDataSet1UPGRADE.AsInteger;
@@ -325,7 +333,10 @@ Label2.Caption:= 'No hay Actualizaciones';
 Timer2.Enabled:=True;}
   end
   else begin
-    Label2.Caption:= 'ACTUALIZADO v.' + IntToStr(Num2);
+    Label2.Caption:= 'ACTUALIZADO #' + IntToStr(Num2);
+    Update;
+    Timer1.Enabled:= True;
+    Timer2.Enabled:= True;
   end;
 end;
 
@@ -391,11 +402,9 @@ begin
   //Timer3.Enabled:= False;
   If FileExists(Ruta + 'Easy*.rar') then
     begin
-      Directorio.Free;
       Directorio := TStringList.Create;
       UListar.FListar.Listar(Ruta, Directorio );
       //ShowMessage( Directorio.Text );
-      //Directorio.Free;
       for o:= 0 to Directorio.Count -1 do
       begin
         DeleteFile(Ruta+Directorio[o]);
@@ -456,9 +465,6 @@ begin
       //on E: Exception do ShowMessage(E.Message + IntToStr(E.HelpContext));
 
       //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
-      Afiles.Free;
-      FTP.Disconnect;
-      FTP.Free;
       Label2.Caption:= 'No se ha podido iniciar la descarga. ';
       Update;
       TmReiniciar.Enabled:= True;
@@ -473,7 +479,6 @@ begin
  //End
  //Else
  //Begin
- Afiles.Destroy;
  Afiles.Free;
  FTP.EndWork(wmRead);
  FTP.Disconnect;
@@ -657,12 +662,48 @@ end;
 
 procedure TFActualizador.FormCreate(Sender: TObject);
 begin
-TrayIcon1.Show;
-FActualizador.Top:= Screen.WorkAreaHeight -187;
-FActualizador.Left:= Screen.WorkAreaWidth -597;
-SimpleDataSet1.Connection:=  SQLConnection1;
-SDS_Actualizador.Connection:=SQLConnection1;
-IniciarApp;
+  TrayIcon1.Show;
+  FActualizador.Top:= Screen.WorkAreaHeight -187;
+  FActualizador.Left:= Screen.WorkAreaWidth -597;
+  Update;
+  Ini2.Free;
+  Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
+
+  Configurado:= Ini2.ReadString( 'ComboBox1', 'Iniciado?', '' );
+  if Configurado = 'SI' then
+    begin
+      CbLetraDisco.Visible:= False;
+      CbTerminal.Visible:= False;
+      CbModo.Visible:= False;
+      BitBtn2.Visible:=False;
+      CbRutaES.Visible:= False;
+      CbRutaApp.Visible:= False;
+      CbRuta_Act.Visible:= False;
+    end;
+  SimpleDataSet1.Connection:=  SQLConnection1;
+  SDS_Actualizador.Connection:=SQLConnection1;
+  PonerProgramaInicio;
+  Ini4:= TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
+  //Ini4.WriteString('Fechas', 'FechaInicio1', FormatDateTime('dd', Now));
+  //FechaInicio1:= Ini4.ReadString ('Fechas', 'FechaInicio1', '');
+  FechaInicio2:= Ini4.ReadString ('Fechas', 'FechaInicio2', '');
+  if FechaInicio2 = '' then
+    begin
+      Ini4.WriteString('Fechas', 'FechaInicio2', '0');
+    end
+    else
+    begin
+      if FechaInicio1 <> FechaInicio2 then
+    begin
+      TmInicioWindows.Enabled:= True;
+      Ini4.WriteString('Fechas', 'FechaInicio2', FechaInicio1 );
+      Ini4.Free;
+    end
+    else
+    begin
+      IniciarApp;
+    end;
+    end;
 //Timer1.Enabled:= True;
 //Timer5.Enabled:= False;
 End;
@@ -670,14 +711,17 @@ End;
 
 Procedure TFActualizador.IniciarApp;
 begin
+SimpleDataSet1.Connection:=  SQLConnection1;
+SDS_Actualizador.Connection:=SQLConnection1;
 TmReiniciar.Enabled:= False;
+TmInicioWindows.Enabled:= False;
 //SQLConnection1.Close;
 
 //Cad3:='ADM_SOPORTE';
 Ini2.Free;
 Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 
-    Configurado:= Ini2.ReadString( 'ComboBox1', 'Iniciado?', '' );
+
     Terminal:= Ini2.ReadString( 'ComboBox1', 'Terminal', '' );
     Modo:= Ini2.ReadString( 'ComboBox1', 'Modo', '' );
     Num1:=StrToInt(Ini2.ReadString('ComboBox1', 'Num_Act', ''));
@@ -685,6 +729,19 @@ Ini2 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
     Ruta_Winrar:=Ini2.ReadString( 'ComboBox1', 'Ruta_Winrar', '' );
     Ruta_Act:= Ini2.ReadString( 'ComboBox1', 'Ruta_Act', '' );
     LetraDisco:= Ini2.ReadString( 'ComboBox1', 'LetraDisco', '' );
+    Configurado:= Ini2.ReadString( 'ComboBox1', 'Iniciado?', '' );
+    if Configurado = 'SI' then
+      begin
+        CbLetraDisco.Visible:= False;
+        CbTerminal.Visible:= False;
+        CbModo.Visible:= False;
+        BitBtn2.Visible:=False;
+        CbRutaES.Visible:= False;
+        CbRutaApp.Visible:= False;
+        CbRuta_Act.Visible:= False;
+      end;
+    Ini2.Free;
+    Probar_Conexion;
     //ShellChangeNotifier1.Root:=Ruta+'Actualizador\';
      
     //Hora_Mod:=StrToDate(Ini2.ReadString( 'ComboBox1', 'Hora_Mod', '' ));
@@ -693,18 +750,10 @@ SimpleDataSet1.Open;
 Num2:= SimpleDataSet1UPGRADE.AsInteger;
 SimpleDataSet1.Close;}
 
-  if Configurado = 'SI' then
-    begin
-   CbLetraDisco.Visible:= False;
-   CbTerminal.Visible:= False;
-   CbModo.Visible:= False;
-   BitBtn2.Visible:=False;
-   CbRutaES.Visible:= False;
-   CbRutaApp.Visible:= False;
-   CbRuta_Act.Visible:= False;
-   //AutoAct;
-   Timer2.Enabled:= True;
-   
+
+
+   //Timer2.Enabled:= True;
+
    //FActualizador.Top:= Screen.WorkAreaHeight +187;
    //FActualizador.Left:= Screen.WorkAreaWidth +597;
    //CompararFecha;
@@ -721,7 +770,7 @@ SimpleDataSet1.Close;}
       //Iniciar Copiar
       //SimpleDataSet1.DataSet.CommandText := 'UPDATE ACTUALIZADOR SET ADM_SOPORTE = ADM_SOPORTE + 1';
       //SimpleDataSet1.Open;
-end;
+
 
 procedure TFActualizador.BitBtn3Click(Sender: TObject);
 var lpFileOp: TSHFileOpStruct;
@@ -783,7 +832,7 @@ begin
 end;
 procedure TFActualizador.Timer1Timer(Sender: TObject);
 begin
-//Probar_Conexion;
+Probar_Conexion;
 end;
 
 procedure TFActualizador.ActualizarAhora1Click(Sender: TObject);
@@ -841,9 +890,9 @@ Ini3 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
 try
 SDS_Actualizador.Open;
 except
-Label2.Caption:= 'Intento de conexion fallida.';
+Label2.Caption:= 'Intento de conexion fallida (AutoAct).';
 TmReiniciar.Enabled:= True;
-exit;
+Exit;
 end;
 Upgrade:= SDS_ActualizadorUPGRADE.AsInteger;
 try
@@ -882,9 +931,13 @@ Update;
    try
    FTP2.Connect;
    except
+   on E: Exception do ShowMessage(E.Message + ' 1 '+IntToStr(E.HelpContext));
     //raise Exception.Create( 'No se ha podido conectar con el servidor. ');
-    Label2.Caption:= 'No se ha podido conectar con el servidor. ';
-    Update;
+    //Label2.Caption:= 'No se ha podido conectar con el servidor (AutoAct1). ';
+    //Update;
+
+    //TmReiniciar.Enabled:= True;
+    //Exit;
   end;
   end;
   SDS_Actualizador.Open;
@@ -905,13 +958,16 @@ Gauge1.MaxValue:= Barra;}
    try
     //PararEjecucion:= False;
     FTP2.BeginWork(wmRead);
-    FTP2.Get( ExtractFileName(AFiles2[i]), LetraDisco+'\Easy System S2010\Actualizador\'+AFiles2[i], True, True );
+    FTP2.Get( ExtractFileName(AFiles2[i]), 'D:\Easy System S2010\Actualizador\'+AFiles2[i],True);
     Sleep(500);
     Except
 
       //raise Exception.Create( 'No se ha podido iniciar la descarga. ');
-      Label2.Caption:= 'No se ha podido iniciar la descarga. ';
-      Update;
+      //Label2.Caption:= 'No se ha podido iniciar la descarga (AutoAct2). ';
+      //Update;
+      on E: Exception do ShowMessage(E.Message + ' 2 '+IntToStr(E.HelpContext));
+      //TmReiniciar.Enabled:= True;
+      //Exit;
       //PararEjecucion:= True;
       //Timer3.Enabled:= True;
 
@@ -945,7 +1001,7 @@ Gauge1.MaxValue:= Barra;}
   SQLConnection1.Execute(sql, nil, nil);
   Ini3 := TIniFile.Create( ChangeFileExt( Application.ExeName, '.INI' ) );
   Ini3.WriteString( 'ComboBox1', 'Num_Actualizador', IntToStr(Upgrade) );
-  Timer5.Enabled:= True;
+  //Timer5.Enabled:= True;
   shellexecute(Handle, 'open',Pchar(Ruta+'copyAct.bat'),nil,nil,SW_HIDE);
   sleep(1000);
 
@@ -954,8 +1010,11 @@ Gauge1.MaxValue:= Barra;}
   //end
   //else begin
   //Timer5.Enabled:= True;
+  end
+  else begin
+  Rev_Nueva_Act;
+  //Timer2.Enabled:= True;
   end;
- 
 
 
  //end;
@@ -1143,7 +1202,7 @@ end;
 
 procedure TFActualizador.Timer5Timer(Sender: TObject);
 begin
-//AutoAct;
+AutoAct;
 //CompararFecha;
 //CompararFecha2
 end;
@@ -1188,6 +1247,11 @@ Update;
 MostrarForm:= False;
 IniciarApp;
 //TmReiniciar.Enabled:= False;
+end;
+
+procedure TFActualizador.TmInicioWindowsTimer(Sender: TObject);
+begin
+IniciarApp;
 end;
 
 end.

@@ -1096,13 +1096,16 @@ object FActualizador: TFActualizador
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 4
-    Height = 23
+    Width = 12
+    Height = 21
+    Caption = '...'
+    Color = 14540253
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -19
+    Font.Height = -17
     Font.Name = 'Calibri'
     Font.Style = []
+    ParentColor = False
     ParentFont = False
   end
   object Gauge1: TGauge
@@ -1118,13 +1121,16 @@ object FActualizador: TFActualizador
   object Label2: TLabel
     Left = 8
     Top = 72
-    Width = 4
+    Width = 12
     Height = 19
+    Caption = '...'
+    Color = 14540253
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Calibri'
     Font.Style = []
+    ParentColor = False
     ParentFont = False
   end
   object CbTerminal: TComboBox
@@ -1698,7 +1704,7 @@ object FActualizador: TFActualizador
   end
   object Timer1: TTimer
     Enabled = False
-    Interval = 600000
+    Interval = 300000
     OnTimer = Timer1Timer
     Left = 504
     Top = 8
@@ -2226,6 +2232,13 @@ object FActualizador: TFActualizador
     Interval = 5000
     OnTimer = TmReiniciarTimer
     Left = 80
+    Top = 8
+  end
+  object TmInicioWindows: TTimer
+    Enabled = False
+    Interval = 60000
+    OnTimer = TmInicioWindowsTimer
+    Left = 48
     Top = 8
   end
 end
