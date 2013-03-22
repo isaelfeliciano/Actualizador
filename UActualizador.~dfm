@@ -1096,13 +1096,16 @@ object FActualizador: TFActualizador
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 4
-    Height = 23
+    Width = 12
+    Height = 21
+    Caption = '...'
+    Color = 15263976
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
-    Font.Height = -19
+    Font.Height = -17
     Font.Name = 'Calibri'
     Font.Style = []
+    ParentColor = False
     ParentFont = False
   end
   object Gauge1: TGauge
@@ -1118,13 +1121,16 @@ object FActualizador: TFActualizador
   object Label2: TLabel
     Left = 8
     Top = 72
-    Width = 4
+    Width = 12
     Height = 19
+    Caption = '...'
+    Color = 15263976
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Calibri'
     Font.Style = []
+    ParentColor = False
     ParentFont = False
   end
   object CbTerminal: TComboBox
@@ -1253,6 +1259,15 @@ object FActualizador: TFActualizador
       'E:'
       'F:'
       'G:')
+  end
+  object BitBtnNew1: TBitBtnNew
+    Left = 264
+    Top = 152
+    Width = 75
+    Height = 25
+    Caption = 'OCULTAR'
+    TabOrder = 7
+    OnClick = BitBtnNew1Click
   end
   object SQLConnection1: TSQLConnection
     ConnectionName = 'IBConnection'
@@ -1698,7 +1713,7 @@ object FActualizador: TFActualizador
   end
   object Timer1: TTimer
     Enabled = False
-    Interval = 600000
+    Interval = 180000
     OnTimer = Timer1Timer
     Left = 504
     Top = 8
@@ -2008,6 +2023,7 @@ object FActualizador: TFActualizador
       0000000000008000000000000000C000000000010000C000000000030000E000
       000000030000F000000000070000FC000000001F0000FF000000007F0000}
     PopupMenu = PopupMenu1
+    OnDblClick = TrayIcon1DblClick
     Left = 536
     Top = 8
   end
@@ -2226,6 +2242,13 @@ object FActualizador: TFActualizador
     Interval = 5000
     OnTimer = TmReiniciarTimer
     Left = 80
+    Top = 8
+  end
+  object TmInicioWindows: TTimer
+    Enabled = False
+    Interval = 60000
+    OnTimer = TmInicioWindowsTimer
+    Left = 48
     Top = 8
   end
 end
