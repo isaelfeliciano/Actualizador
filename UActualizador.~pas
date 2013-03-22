@@ -691,6 +691,7 @@ begin
     FActualizador.Top:= Screen.WorkAreaHeight +187;
     FActualizador.Left:= Screen.WorkAreaWidth +597;
     TmInicioWindows.Enabled:= True;
+    Ini4.Free;
   end
   else
   begin

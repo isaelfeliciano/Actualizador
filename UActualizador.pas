@@ -206,6 +206,28 @@ uses UnuevaAct, Ulistar;
 
 {$R *.dfm}
 
+function WindowsUpTime : string ;
+   function MSecToTime(mSec: Integer): string;
+   const
+     secondTicks = 1000;
+     minuteTicks = 1000 * 60;
+     hourTicks = 1000 * 60 * 60;
+     dayTicks = 1000 * 60 * 60 * 24;
+   var
+      M : string;
+      ZM : Integer;
+   begin
+
+      ZM := mSec div hourTicks;
+      Dec(mSec, ZM * minuteTicks) ;
+      M := IntToStr(ZM) ;
+      Result :=M;
+   end;
+ begin
+   result := MSecToTime(GetTickCount) ;
+
+ end;
+
 function ExisteArchivo(Ruta:string):boolean;
 begin
       if (FileExists(Ruta)) then
@@ -678,20 +700,11 @@ if Configurado = 'SI' then
       CbRutaApp.Visible:= False;
       CbRuta_Act.Visible:= False;
     end;
-DiaA:= FormatDateTime('dd', now);
-Ini4.WriteString('ComboBox1', 'DiaA', DiaA);
-DiaB:= Ini4.ReadString('ComboBox1', 'DiaB', '');
-if DiaB = '' then
-begin
-  Ini4.WriteString('ComboBox1', 'DiaB', '0');
-  end;
-  If DiaA <> DiaB Then
+  If WindowsUpTime = '0' Then
   begin
-    Ini4.WriteString('ComboBox1', 'Diab', DiaA);
     FActualizador.Top:= Screen.WorkAreaHeight +187;
     FActualizador.Left:= Screen.WorkAreaWidth +597;
     TmInicioWindows.Enabled:= True;
-    Ini4.Free;
   end
   else
   begin
